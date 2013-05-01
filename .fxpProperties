@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<fxpProperties abbreviated="false" authoringTool="Flex Builder" compiles="true" parentProject="d3f05c0c-5c3f-4e19-b43c-f534f1defd17" projectUUID="d3f05c0c-5c3f-4e19-b43c-f534f1defd17" pureCatalystProject="false" sdkVersion="4.6.0" uuid="d32e70f4-fdc7-41ef-8275-df4b857cb833" version="15">
+  <projects/>
+  <src>
+    <linked isMain="false" location="${PROJECT_FRAMEWORKS}/projects/mx/src/mx" path="${PROJECT_FRAMEWORKS}/projects/mx/src/mx" position="0" uuid="d32e70f4-fdc7-41ef-8275-df4b857cb833"/>
+  </src>
+  <swc>
+    <linked location="sdkPlaceHolder" path="sdkPlaceHolder" position="0" uuid="d32e70f4-fdc7-41ef-8275-df4b857cb833"/>
+    <linked location="/libs" path="\libs" position="1" uuid="d32e70f4-fdc7-41ef-8275-df4b857cb833"/>
+    <linked location="/Users/pawelbardzinski/Documents/Alive6_1/src/analytics.swc" path="\linked-swc\analytics.swc" position="2" uuid="d32e70f4-fdc7-41ef-8275-df4b857cb833"/>
+    <linked location="/Users/pawelbardzinski/Documents/Alive6_1/src/flexlib.swc" path="\linked-swc\flexlib.swc" position="3" uuid="d32e70f4-fdc7-41ef-8275-df4b857cb833"/>
+    <linked location="/Users/pawelbardzinski/Documents/Alive6_1/src/zip.swc" path="\linked-swc\zip.swc" position="4" uuid="d32e70f4-fdc7-41ef-8275-df4b857cb833"/>
+    <linked location="${PROJECT_FRAMEWORKS}/libs/mx/mx.swc" path="${PROJECT_FRAMEWORKS}/libs/mx/mx.swc" position="5" uuid="d32e70f4-fdc7-41ef-8275-df4b857cb833"/>
+    <linked location="${PROJECT_FRAMEWORKS}/libs/mobile/mobilecomponents.swc" path="${PROJECT_FRAMEWORKS}/libs/mobile/mobilecomponents.swc" position="6" uuid="d32e70f4-fdc7-41ef-8275-df4b857cb833"/>
+  </swc>
+  <misc/>
+  <theme/>
+  <mxmlFormattingPrefs groupAttributesByState="true" maxLineWidth="100" mxmlAlignAttributes="true" mxmlAttributeOrder="id,userLabel,includeIn,excludeFrom,visible,x,y,z,left,right,top,bottom,width,height,minWidth,minHeight,maxWidth,maxHeight,label" mxmlKeepAttributeValuesOrganized="true"/>
+</fxpProperties>

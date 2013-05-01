@@ -1,0 +1,39 @@
+public class NonTruncatingButton extends Button
+{
+private var _truncateLabel:Boolean;
+
+public function NonTruncatingButton()
+{
+super();
+
+this._truncateLabel = true;
+}
+
+override protected function createChildren():void
+{
+if (!textField)
+{
+if (!_truncateLabel)
+textField = new NonTruncatingUITextField();
+else
+textField = new UITextField();
+
+textField.styleName = this;
+
+addChild(DisplayObject(textField));
+}
+
+super.createChildren();
+}
+
+[Inspectable]
+public function get truncateLabel():Boolean
+{
+return this._truncateLabel;
+}
+
+public function set truncateLabel(value:Boolean):void
+{
+this._truncateLabel = value;    
+}   
+}
