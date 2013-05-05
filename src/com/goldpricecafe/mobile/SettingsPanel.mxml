@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:gpc="com.goldpricecafe.mobile.*"
 		 width="100%" height="100%"
 		 creationComplete="creationCompleteHandler(event)">
 	
@@ -105,6 +106,11 @@
 				CustomStyleManager.setStyle("s|BusyIndicator","symbolColor",fontColorTI.text);	
 				synchronize();
 			}
+			protected function fontFamilyHandler(event:Event):void
+			{				
+				/*TODO: Implement */
+			}			
+			
 			
 			protected function borderColorHandler(event:Event):void
 			{
@@ -141,19 +147,35 @@
 			{
 				CustomStyleManager.setStyle("s|Application","serie1Color",serie1ColorTI.text);
 				synchronize();
-			}	
+			}
+			
+			protected function serie1WeightHandler(event:Event):void
+			{
+				/*TODO: Implement */
+			}			
 			
 			protected function serie2ColorHandler(event:Event):void
 			{
 				CustomStyleManager.setStyle("s|Application","serie2Color",serie1ColorTI.text);
 				synchronize();
+			}
+			
+			protected function serie2WeightHandler(event:Event):void
+			{
+				/*TODO: Implement */
 			}			
 			
 			protected function serie3ColorHandler(event:Event):void
 			{
 				CustomStyleManager.setStyle("s|Application","serie3Color",serie1ColorTI.text);
 				synchronize();
-			}			
+			}
+			
+			protected function serie3WeightHandler(event:Event):void
+			{
+				/*TODO: Implement */
+			}
+			
 		]]>
 	</fx:Script>
 	
@@ -184,15 +206,35 @@
 	</s:VGroup>
 	<s:Spacer width="20" />
 	<s:VGroup id="settingsValuesGroup" height="100%" width="100%">
-		<s:TextInput id="fontColorTI" width="100%" height="100%" focusOut="fontColorHandler(event)" enter="fontColorHandler(event)"/>
+		<s:HGroup width="100%" height="100%">
+			<s:TextInput id="fontColorTI" width="70%" height="100%" focusOut="fontColorHandler(event)" enter="fontColorHandler(event)"/>
+			<gpc:HSpinner id="fontFamilySpinner" width="40%" height="100%" change="fontFamilyHandler(event)">
+				<s:ArrayCollection source="[Michroma]"/>
+			</gpc:HSpinner>
+		</s:HGroup>
 		<s:TextInput id="borderColorTI" width="100%" height="100%" focusOut="borderColorHandler(event)" enter="borderColorHandler(event)"/>	
 		<s:TextInput id="backgroundColorTI" width="100%" height="100%" focusOut="backgroundColorHandler(event)" enter="backgroundColorHandler(event)"/>
 		<s:TextInput id="buttonColorTI" width="100%" height="100%" focusOut="buttonColorHandler(event)" enter="buttonColorHandler(event)"/>	
 		<s:TextInput id="highlightColorTI" width="100%" height="100%" focusOut="highlightColorHandler(event)" enter="highlightColorHandler(event)"/>
-		<s:TextInput id="highlightBorderTI" width="100%" height="100%" focusOut="highlightBorderHandler(event)" enter="highlightBorderHandler(event)"/>		
-		<s:TextInput id="serie1ColorTI" width="100%" height="100%" focusOut="serie1ColorHandler(event)" enter="serie1ColorHandler(event)"/>
-		<s:TextInput id="serie2ColorTI" width="100%" height="100%" focusOut="serie2ColorHandler(event)" enter="serie2ColorHandler(event)"/>
-		<s:TextInput id="serie3ColorTI" width="100%" height="100%" focusOut="serie3ColorHandler(event)" enter="serie3ColorHandler(event)"/>		
+		<s:TextInput id="highlightBorderTI" width="100%" height="100%" focusOut="highlightBorderHandler(event)" enter="highlightBorderHandler(event)"/>	
+		<s:HGroup width="100%" height="100%">
+			<s:TextInput id="serie1ColorTI" width="70%" height="100%" focusOut="serie1ColorHandler(event)" enter="serie1ColorHandler(event)"/>
+			<gpc:HSpinner id="serie1ColorWeightSpinner" width="40%" height="100%" change="serie1WeightHandler(event)">
+				<s:ArrayCollection source="[1,2,3,4]"/>
+			</gpc:HSpinner>
+		</s:HGroup>		
+		<s:HGroup width="100%" height="100%">
+			<s:TextInput id="serie2ColorTI" width="70%" height="100%" focusOut="serie2ColorHandler(event)" enter="serie2ColorHandler(event)"/>
+			<gpc:HSpinner id="serie2ColorWeightSpinner" width="40%" height="100%" change="serie2WeightHandler(event)">
+				<s:ArrayCollection source="[1,2,3,4]"/>
+			</gpc:HSpinner>
+		</s:HGroup>
+		<s:HGroup width="100%" height="100%">
+			<s:TextInput id="serie3ColorTI" width="70%" height="100%" focusOut="serie3ColorHandler(event)" enter="serie3ColorHandler(event)"/>
+			<gpc:HSpinner id="serie3ColorWeightSpinner" width="40%" height="100%" change="serie3WeightHandler(event)">
+				<s:ArrayCollection source="[1,2,3,4]"/>
+			</gpc:HSpinner>
+		</s:HGroup>		
 	</s:VGroup>
 	
 </s:Group>
