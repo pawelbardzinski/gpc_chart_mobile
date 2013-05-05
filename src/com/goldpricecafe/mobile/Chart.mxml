@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" width="100%" height="100%"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 initialize="init()"
+		 creationComplete="creationCompleteHandler(event)"		 
+		 gestureZoom="zoomGestureHandler(event)"
+		 gesturePan="panGestureHandler(event)" >
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<fx:Metadata>
+		[Style(name="serie1Color",type="Number",format="Color",inherit="yes")]
+		[Style(name="serie2Color",type="Number",format="Color",inherit="yes")]
+		[Style(name="serie3Color",type="Number",format="Color",inherit="yes")]
+	</fx:Metadata>
+	
+	<fx:Declarations>
+		
+		<s:SolidColorStroke id="serie1LineStroke" weight="1" color="{getStyle('serie1Color')}" />		
+		<s:SolidColorStroke id="serie2LineStroke" weight="1" color="{getStyle('serie2Color')}" />
+		<s:SolidColorStroke id="serie3LineStroke" weight="1" color="{getStyle('serie3Color')}" />
+		
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.charts.chartClasses.IAxis;
+			import mx.events.FlexEvent;
+			
+			//////////////////////////////////////////////////////
+			//                                     				//
+			//					Properties						//
+			//													//
+			//////////////////////////////////////////////////////
+			
+			/** 
+			 * Chart type. Use following constants from com.goldpricecafe.mobile.Constants:
+			 * GOLD, SILVER, PLATINUM, PALLDIUM, GLD_SLV_RATIO, GLD_PLT_RATIO 
+			 */
+			[Bindable]
+			public function set chartType( type:String ) : void {
+				
+				_chartType = type;
+				updateChartTitle();
+
+				
+			}	
+			public function get chartType() : String {
+				
+				return _chartType;
+			}			
+			
+			/**
+			 * Weight units. Use following constants from com.goldpricecafe.mobile.Constants:
+			 * UNITS_GR, UNITS_OZ
+			 */
+			[Bindable]
+			public function set weightUnits( units:String ) : void {
+				
+				_weightUnits = units;
+				updateChartTitle();
+				
+			}	
+			public function get weightUnits() : String {
+				
+				return _weightUnits;
+			}			
+			
+			/**
+			 * Weight units. Use following constants from com.goldpricecafe.mobile.Constants:
+			 * RANGE_3DAYS, RANGE_1DAY, RANGE_HISTORY
+			 */			
+			[Bindable]
+			public function set dataRange( range:uint ) : void {
+				
+				_dataRange = range;
+				updateChartTitle();
+				
+				switch( range ) {
+					case Constants.RANGE_1DAY:
+						serie2.visible = serie3.visible = false;
+						break;
+					case Constants.RANGE_3DAYS:
+						serie2.visible = serie3.visible = true;
+						break;	
+					case Constants.RANGE_HISTORY:
+						serie2.visible = serie3.visible = false;
+						break;					
+				}				
+				
+			}
+			public function get dataRange() : uint {
+				
+				return _dataRange;
+			}
+			
+			/**
+			 * Currency. Use one of the values from com.goldpricecafe.mobile.Constants.CURRENCIES
+			 */			
+			[Bindable]
+			public function set currency( currency:String ) : void {
+				
+				_currency = currency;			
+				updateChartTitle();
+
+				
+			}	
+			public function get currency( ) : String {
+				
+				return _currency;
+				
+			}			
+			
+			//////////////////////////////////////////////////
+			//                                     			//
+			//					Protected 					//
+			//												//
+			//////////////////////////////////////////////////				
+					
+			protected var _dataRange:uint;
+			protected var _weightUnits:String;
+			protected var _currency:String;
+			protected var _chartType:String;			
+			
+			protected function updateChartTitle() : void {
+				
+				var chartTitle:String;
+				var axisTitle:String;
+				
+				if(  _chartType != null && _chartType.length > 0 ) {
+					
+					chartTitle = (_dataRange != Constants.RANGE_HISTORY) ? "Live " : "Historical ";
+					
+					switch(_chartType) {
+						
+						case Constants.GLD_PLT_RATIO:
+						case Constants.GLD_SLV_RATIO:
+							
+							chartTitle += (_chartType + " Price Ratio");
+							break;
+						
+						default:
+							
+							chartTitle += (_chartType + " Price");					
+							
+							if( _currency ) {						
+								chartTitle += " in " + _currency.toUpperCase();
+								axisTitle = _currency.toUpperCase();
+							}
+							if( _weightUnits ) {						
+								chartTitle += "/" + weightUnits.toUpperCase();
+								axisTitle += "/" + weightUnits.toUpperCase();
+							}
+							
+					}
+					
+				} else {
+					chartTitle = "";
+				}
+				
+				chartLabel.text = chartTitle;
+				varticalAxis.title = axisTitle;
+				
+			}
+			
+			public function zoom( ratio:Number ) : void {
+				
+				var delta:Number = ( horizontalAxis.maximum - horizontalAxis.minimum ) * (ratio - 1);
+				var max:Number = horizontalAxis.maximum - delta/2;
+				var min:Number = horizontalAxis.minimum + delta/2;
+				
+				horizontalAxis.minimum = Math.max(0,min);
+				horizontalAxis.maximum = Math.min(max,24*60);
+				
+			}
+			
+			public function pan( offset:Number ) : void {
+				
+				var delta:Number = ( horizontalAxis.maximum - horizontalAxis.minimum ) * (offset / chart.width );
+				var max:Number = horizontalAxis.maximum - delta;
+				var min:Number = horizontalAxis.minimum - delta;	
+				
+				if( min < 0 ) {
+					
+					max = Math.min(24*60,max-min);
+					min = 0;
+					
+				} else if( max > 24*60 ) {
+					
+					min = Math.max(0,min - (max - 24*60));
+					max = 24*60;
+				}
+				
+				horizontalAxis.minimum = min;
+				horizontalAxis.maximum = max;							
+				
+			}
+			
+			public function hLabelFunction( val:Number, prevVal:Number, axis:IAxis ) : String {
+				
+				var hour:int = Math.round(val / 60);
+				var min:int = val % 60;
+				
+				return ((hour < 10) ? "0" + hour.toString() : hour.toString()) + ":" + ((min < 10) ? "0" + min.toString() : min.toString());
+				
+			}
+			
+			public override function styleChanged( styleProp:String ) : void {
+				
+				super.styleChanged( styleProp );
+				
+				switch( styleProp ) {
+					
+					case "serie1Color":
+						serie1LineStroke.color = Number(getStyle( styleProp ));
+						break;
+					
+					case "serie2Color":
+						serie2LineStroke.color = Number(getStyle( styleProp ));
+						break;
+					
+					case "serie3Color":
+						serie3LineStroke.color = Number(getStyle( styleProp ));
+						break;					
+					
+				}
+	
+			}
+			
+			//////////////////////////////////////////////////////
+			//                                     				//
+			//					Event handlers					//
+			//													//
+			//////////////////////////////////////////////////////			
+			
+			
+			protected function init() : void  {
+				
+			
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void {
+				
+			}			
+			
+			protected function mouseWheelHandler( e:Event ) : void {
+				zoom(e["delta"] > 0 ? 1 + e["delta"]/24 : 1/(1 - e["delta"]/24) );
+			}
+			
+			protected function zoomGestureHandler( e:TransformGestureEvent ) : void {
+				
+				zoom(e.scaleX);
+				
+			}
+			
+			protected function panGestureHandler( e:TransformGestureEvent ) : void {
+				
+				pan(e.offsetX);
+				
+			}						
+			
+		]]>
+	</fx:Script>
+	
+	<!--
+	
+	//////////////////////////////////////////////////////
+	//                                     				//
+	//					Skin							//
+	//													//
+	//////////////////////////////////////////////////////
+	
+	-->
+	
+	<s:Label id="chartLabel" width="100%" textAlign="center" styleName="fontMedium" />
+	
+	<mx:LineChart id="chart" width="100%" height="100%" cacheAsBitmap="true" showDataTips="true" mouseWheel="mouseWheelHandler(event)" >
+		
+		<!-- Vertical Axis -->
+		<mx:verticalAxis>
+			<mx:LinearAxis id="varticalAxis" baseAtZero="false" />
+		</mx:verticalAxis>
+		<mx:verticalAxisRenderers>					
+			<mx:AxisRenderer id="verticalAxisRenderer" axis="{varticalAxis}" styleName="fontSmall">
+				<mx:axisStroke>
+					<mx:SolidColorStroke id="varticalAxisStroke" weight="1" color="yellow"/>
+				</mx:axisStroke>							
+			</mx:AxisRenderer>
+		</mx:verticalAxisRenderers>	
+		
+		<!-- Horizontal Axis -->
+		<mx:horizontalAxis>
+			<mx:LinearAxis id="horizontalAxis" title="Date" baseAtZero="true" maximum="{24*60}" labelFunction="{hLabelFunction}"/>
+		</mx:horizontalAxis>
+		<mx:horizontalAxisRenderers>					
+			<mx:AxisRenderer id="horizontalAxisRenderer" axis="{horizontalAxis}" styleName="fontSmall" >
+				<mx:axisStroke>
+					<mx:SolidColorStroke id="horizontalAxisStroke" weight="1" color="yellow"/>
+				</mx:axisStroke>							
+			</mx:AxisRenderer>
+		</mx:horizontalAxisRenderers>
+		
+		<!-- Grid -->
+		<mx:backgroundElements>
+			<mx:GridLines id="gridlines" horizontalChangeCount="1" verticalChangeCount="1"  >
+				<mx:horizontalStroke>
+					<mx:SolidColorStroke id="horLine" color="0x999999" />						
+				</mx:horizontalStroke>
+				<mx:verticalStroke>
+					<mx:SolidColorStroke id="verLine" color="0x999999" />
+				</mx:verticalStroke>
+				<mx:horizontalFill>
+					<mx:SolidColor id="horFill" />
+				</mx:horizontalFill>
+				<mx:verticalFill>
+					<mx:SolidColor id="verFill" />
+				</mx:verticalFill>
+			</mx:GridLines>			
+		</mx:backgroundElements>
+		
+		<!-- Series -->
+		<mx:series>
+			<mx:LineSeries id="serie1" interpolateValues="true" lineStroke="{serie1LineStroke}" xField="time" yField="value" selectable="true" />
+			<mx:LineSeries id="serie2" interpolateValues="true" lineStroke="{serie2LineStroke}" xField="time" yField="value" selectable="true" />
+			<mx:LineSeries id="serie3" interpolateValues="true" lineStroke="{serie3LineStroke}" xField="time" yField="value" selectable="true" />	
+		</mx:series>
+		
+	</mx:LineChart>	
+</s:Group>

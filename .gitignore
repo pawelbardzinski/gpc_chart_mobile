@@ -1,0 +1,9 @@
+# Eclipse files
+.metadata
+.settings
+
+# build
+
+build*
+bin*
+

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  width="100%" 
+		  height="100%">
+	
+	<fx:Metadata>
+		[DefaultProperty("dataProvider")]
+		[Event(name="change", type="flash.events.Event")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		
+		<![CDATA[
+			import mx.collections.IList;
+			
+			[Bindable]
+			public function set dataProvider( provider:IList ) : void {
+				
+				_dataProvider = provider;
+				selectedIndex = 0;
+				
+			}
+			public function get dataProvider( ) : IList {
+				
+				return _dataProvider;
+			}
+			
+
+			[Bindable]
+			public function set selectedIndex( index:int ) : void {
+				
+				if(_dataProvider) {
+				
+					if(index >= _dataProvider.length ) {
+						index = _dataProvider.length - 1;
+					} else if(index < 0) {
+						_selectedIndex = -1;
+					} else {
+						_selectedIndex = index;
+					}
+					
+				}
+				
+				valueLbl.text = String(selectedValue);
+				dispatchEvent( new Event(Event.CHANGE) );
+				
+			}
+			public function get selectedIndex() : int {
+				
+				return _selectedIndex;
+				
+			}	
+			
+			public function get selectedValue( ) : Object {
+				
+				if(_dataProvider && _selectedIndex >= 0) {
+					return _dataProvider[_selectedIndex];
+				}
+				
+				return null;
+				
+			}			
+			
+			protected var _dataProvider:IList;
+			protected var _selectedIndex:int = -1;
+			
+			protected function lessBtnClickHandler(event:MouseEvent):void
+			{
+				if(!_dataProvider) return;
+				
+				selectedIndex = _selectedIndex > 0 ? _selectedIndex - 1 : _dataProvider.length - 1;				
+			}
+			
+			protected function moreBtnClickHandler(event:MouseEvent):void
+			{
+				if(!_dataProvider) return;
+				
+				selectedIndex = _selectedIndex < _dataProvider.length - 1 ? _selectedIndex + 1 : 0;	
+				
+			}
+			
+		]]>
+		
+	</fx:Script>
+	
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:Button id="lessBtn" width="20%" height="100%" minWidth="20" click="lessBtnClickHandler(event)"/>
+	<s:TextInput id="valueLbl" width="60%" height="100%" editable="false" />
+	<s:Button id="moreBtn" width="20%" height="100%" minWidth="20" click="moreBtnClickHandler(event)"/>
+			 
+</s:HGroup>
