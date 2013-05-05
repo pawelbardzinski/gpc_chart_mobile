@@ -1,0 +1,736 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:gpc="com.goldpricecafe.mobile.*" 
+			   applicationDPI="160"
+			   height="480" 
+			   width="640"
+			   backgroundColor="black"
+			   preloader="SlicedCirclePreloader"
+			   resizeForSoftKeyboard="true"
+			   initialize="init()" 
+			   resize="resizeHandler()" 
+			   creationComplete="creationComplatedHandler()"  >
+	
+	<s:layout>
+		<s:VerticalLayout paddingLeft="5" paddingRight="5" paddingBottom="5"/>
+	</s:layout>
+	
+	<fx:Style source="goldpricecafe.css"/>
+	<fx:Metadata>
+		[Style(name="serie1Color",type="Number",format="Color",inherit="yes")]
+	</fx:Metadata>
+	
+	<s:states>
+		<s:State name="normal" />
+		<s:State name="settings" />
+		<s:State name="fullscreen"/>
+	</s:states>
+	
+	<fx:Declarations>
+		
+		<s:RadioButtonGroup id="unitsRedioGroup" change="weightUnits = unitsRedioGroup.selectedValue.toString()" />
+		<s:RadioButtonGroup id="chartTypeRadioGroup" change="chartType = chartTypeRadioGroup.selectedValue.toString()" />
+		<s:SolidColorStroke id="serie2LineStroke" weight="1" color="yellow" />
+		<s:SolidColorStroke id="serie3LineStroke" weight="1" color="yellow" />
+		
+	</fx:Declarations>
+	
+	<fx:Script>
+
+		<![CDATA[	
+
+			import com.goldpricecafe.mobile.Constants;
+			
+			import mx.charts.chartClasses.IAxis;
+			import mx.collections.ArrayList;
+			import mx.events.FlexEvent;
+			
+			protected static const DATA_PROVIDER_CLASS:Class = com.goldpricecafe.mobile.DataProvider;
+			
+			//////////////////////////////////////////////////////
+			//                                     				//
+			//					Properties						//
+			//													//
+			//////////////////////////////////////////////////////
+			
+			/** 
+			 * Chart type. Use following constants from com.goldpricecafe.mobile.Constants:
+			 * GOLD, SILVER, PLATINUM, PALLDIUM, GLD_SLV_RATIO, GLD_PLT_RATIO 
+			 */
+			[Bindable]
+			public function set chartType( type:String ) : void {
+				
+				_chartType = type;		
+				chartTypeRadioGroup.selectedValue = type;
+				updateChartTitle();	
+				updateChartData();
+				
+			}	
+			public function get chartType() : String {
+				
+				return _chartType;
+			}
+			
+			/**
+			 * Weight units. Use following constants from com.goldpricecafe.mobile.Constants:
+			 * UNITS_GR, UNITS_OZ
+			 */
+			[Bindable]
+			public function set weightUnits( units:String ) : void {
+				
+				_weightUnits = units;
+				unitsRedioGroup.selectedValue = units;
+				updateChartTitle();
+				updateChartData();
+				
+			}	
+			public function get weightUnits() : String {
+				
+				return _weightUnits;
+			}
+			
+			/**
+			 * Weight units. Use following constants from com.goldpricecafe.mobile.Constants:
+			 * RANGE_3DAYS, RANGE_1DAY, RANGE_HISTORY
+			 */			
+			[Bindable]
+			public function set dataRange( range:uint ) : void {
+				
+				_dataRange = range;
+				dataRangeBar.selectedIndex = range;
+				updateChartTitle();
+				
+				switch( range ) {
+					case Constants.RANGE_1DAY:
+						serie2.visible = serie3.visible = false;
+						break;
+					case Constants.RANGE_3DAYS:
+						serie2.visible = serie3.visible = true;
+						break;	
+					case Constants.RANGE_HISTORY:
+						serie2.visible = serie3.visible = false;
+						break;					
+				}				
+				
+			}
+			public function get dataRange() : uint {
+				
+				return _dataRange;
+			}
+			
+			/**
+			 * Currency. Use one of the values from com.goldpricecafe.mobile.Constants.CURRENCIES
+			 */			
+			[Bindable]
+			public function set currency( currency:String ) : void {
+				
+				_currency = currency;
+				//currencyCombo.selectedItem = currency;
+				//currencyCombo.prompt = currency.toUpperCase();
+				
+				updateChartTitle();
+				updateChartData();
+				currencyBtn.label = currency;
+				
+			}	
+			public function get currency( ) : String {
+				
+				return _currency;
+				
+			}
+			
+			[Bindable]
+			public function set busy( val:Boolean ) : void {
+				
+				throbber.visible = val;
+			}
+			public function get busy() : Boolean {
+				
+				return throbber.visible;
+			}
+			
+			//////////////////////////////////////////////////////
+			//                                     				//
+			//					Protected fields				//
+			//													//
+			//////////////////////////////////////////////////////
+			
+			protected var _screenSize:uint = Constants.SCREEN_BIG;
+			
+			/* Current data */
+			
+			protected var _dataProvider:IDataProvider;
+			
+			/* Currencies */
+			
+			protected var _currency:String;
+			
+			/* Chart type */
+			
+			protected var _chartType:String;
+			
+			/* Weight units */			
+			
+			protected var _weightUnits:String;
+			
+			/* Data ranges */
+			
+			protected var _dataRange:uint;
+			
+			/* Prices */
+			
+			protected var _gldPrices:Array;
+			protected var _gldSlvRatios:Array;
+			protected var _gldPltRatios:Array;
+			protected var _gldPldRatios:Array;
+			
+			/* Next update */
+			
+			protected var _nextUpdate:Date = new Date();
+			protected var _timer:Timer = new Timer(1000);
+			
+			
+			//////////////////////////////////////////////////////
+			//                                     				//
+			//					Protected methods				//
+			//													//
+			//////////////////////////////////////////////////////	
+			
+
+			protected function updateHeader() : void {
+				
+				var now:Date = new Date();
+				var sec:int = Math.round( (_nextUpdate.getTime() - now.getTime() )/1000 );
+				var min:int = sec/60;
+				sec = sec % 60;
+				
+				if( sec <= 0 ) {
+					
+					headerLabel.text = "Next Live Price Update: loading...";
+					
+				} else {
+					
+					headerLabel.text = "Next Live Price Update: " + 
+						((min < 10) ? "0" + min.toString() : min.toString()) + ":" +
+						((sec < 10) ? "0" + sec.toString() : sec.toString());
+				}
+				
+			}
+			
+			protected function updateChartTitle() : void {
+				
+				var chartTitle:String;
+				var axisTitle:String;
+				
+				if(  _chartType != null && _chartType.length > 0 ) {
+					
+					chartTitle = (_dataRange != Constants.RANGE_HISTORY) ? "Live " : "Historical ";
+					
+					switch(chartType) {
+						
+						case Constants.GLD_PLT_RATIO:
+						case Constants.GLD_SLV_RATIO:
+							
+							chartTitle += (chartType + " Price Ratio");
+							break;
+						
+						default:
+							
+							chartTitle += (chartType + " Price");					
+							
+							if( _currency ) {						
+								chartTitle += " in " + _currency.toUpperCase();
+								axisTitle = _currency.toUpperCase();
+							}
+							if( _weightUnits ) {						
+								chartTitle += "/" + weightUnits.toUpperCase();
+								axisTitle += "/" + weightUnits.toUpperCase();
+							}
+							
+					}
+					
+				} else {
+					chartTitle = "";
+				}
+				
+				chartLabel.text = chartTitle;
+				varticalAxis.title = axisTitle;
+				
+			}
+			
+			protected function scaleStyles() : void {
+				
+				var ratio:Number = unscaledWidth/640.0;
+				
+				if( styleManager ) {
+					
+					var style:CSSStyleDeclaration;
+					
+					style = styleManager.getStyleDeclaration( ".fontBig" );
+					style.setStyle( "fontSize",Math.round( style.getStyle("fontSize")*ratio) );
+					style = styleManager.getStyleDeclaration( ".fontMedium" );
+					style.setStyle( "fontSize",Math.round( style.getStyle("fontSize")*ratio) );
+					style = styleManager.getStyleDeclaration( ".fontSmall" );
+					style.setStyle( "fontSize",Math.round( style.getStyle("fontSize")*ratio) );
+				}
+				
+			}
+			
+			protected function updateChartData() : void {
+				
+				if( !_dataProvider ) return;
+				
+				var data:Object = _dataProvider.getData(currency);
+				
+				_gldPrices = data[Constants.GOLD];
+				_gldSlvRatios = data[Constants.GLD_SLV_RATIO];
+				_gldPltRatios = data[Constants.GLD_PLT_RATIO];
+				_gldPldRatios = data[Constants.GLD_PLD_RATIO];				
+				
+				var data1:ArrayList = new ArrayList();
+				var data2:ArrayList = new ArrayList();
+				var data3:ArrayList = new ArrayList();
+				
+				if( _gldPrices != null ) {
+					
+					for( var i:uint=0; i<_gldPrices.length; i++ ) {
+						
+						if(i >= _gldPrices.length) break;
+						
+						var time:int = _gldPrices[i][0];
+						var prices:Array = calculatePrices(i);
+						
+						data1.addItem( { "time":time, "value":prices[0] } );
+						data2.addItem( { "time":time, "value":prices[1] } );
+						data3.addItem( { "time":time, "value":prices[2] } );	
+						
+					}
+					
+				}
+				
+				serie1.dataProvider = data1;				
+				serie2.dataProvider = data2;
+				serie3.dataProvider = data3;				
+				
+			}
+			
+			
+			protected function calculatePrices( index:uint ) : Array {
+				
+				
+				if((!_gldPrices) || (index > _gldPrices.length) ) return [null,null,null];
+				
+				var wightScale:Number = ( _weightUnits == Constants.UNITS_GR ) ? Constants.GROZ_RATIO : 1.0;
+				var prices:Array = [null, null, null];
+				var i:uint;
+				
+				switch( _chartType ) {
+					
+					case Constants.GOLD :
+						
+						for( i=0; i<3; i++ ) 
+						{							
+							prices[i] = _gldPrices[index][i+1] * wightScale;							
+						}		
+						return prices;
+						
+					case Constants.SILVER :
+						
+						if((!_gldSlvRatios) || (index > _gldSlvRatios.length) ) return [null,null,null];			
+						for( i=0; i<3; i++ ) 
+						{				
+							prices[i] = _gldPrices[index][i+1] / _gldSlvRatios[index][i+1] * wightScale;						
+						}				
+						return prices;	
+						
+					case Constants.PLATINUM :
+						
+						if((!_gldPltRatios) || (index > _gldPltRatios.length) ) return [null,null,null];
+						for( i=0; i<3; i++ ) 
+						{	
+							prices[i] = _gldPrices[index][i+1] / _gldPltRatios[index][i+1] * wightScale;	
+						}
+						return prices;		
+						
+					case Constants.PALLADIUM :
+						
+						if((!_gldPldRatios) || (index > _gldPldRatios.length) ) return [null,null,null];
+						for( i=0; i<3; i++ ) {							
+							prices[i] = _gldPrices[index][i+1] / _gldPldRatios[index][i+1] * wightScale;						
+						}		
+						return prices;							
+						
+					case Constants.GLD_PLT_RATIO :
+						
+						if((!_gldSlvRatios) || (index > _gldSlvRatios.length) ) return [null,null,null];
+						for( i=0; i<3; i++ ) 
+						{						
+							prices[i] = _gldPltRatios[index][i+1];						
+						}
+						
+						return prices;						
+						
+					case Constants.GLD_SLV_RATIO :
+						
+						if((!_gldSlvRatios) || (index > _gldSlvRatios.length) ) return [null,null,null];
+						for( i=0; i<3; i++ ) 
+						{							
+							prices[i] = _gldSlvRatios[index][i+1];							
+						}				
+						return prices;
+						
+					default:
+						
+						return [null,null,null];					
+						
+				}				
+				
+				
+			}
+			
+			public function zoom( ratio:Number ) : void {
+				
+				var delta:Number = ( horizontalAxis.maximum - horizontalAxis.minimum ) * (ratio - 1);
+				var max:Number = horizontalAxis.maximum - delta/2;
+				var min:Number = horizontalAxis.minimum + delta/2;
+				
+				horizontalAxis.minimum = Math.max(0,min);
+				horizontalAxis.maximum = Math.min(max,24*60);
+				
+			}
+			
+			public function pan( offset:Number ) : void {
+				
+				var delta:Number = ( horizontalAxis.maximum - horizontalAxis.minimum ) * (offset / chart.width );
+				var max:Number = horizontalAxis.maximum - delta;
+				var min:Number = horizontalAxis.minimum - delta;	
+				
+				if( min < 0 ) {
+					
+					max = Math.min(24*60,max-min);
+					min = 0;
+					
+				} else if( max > 24*60 ) {
+					
+					min = Math.max(0,min - (max - 24*60));
+					max = 24*60;
+				}
+				
+				horizontalAxis.minimum = min;
+				horizontalAxis.maximum = max;							
+				
+			}
+			
+			public function hLabelFunction( val:Number, prevVal:Number, axis:IAxis ) : String {
+				
+				var hour:int = Math.round(val / 60);
+				var min:int = val % 60;
+				
+				return ((hour < 10) ? "0" + hour.toString() : hour.toString()) + ":" + ((min < 10) ? "0" + min.toString() : min.toString());
+				
+			}
+			
+			
+			
+			//////////////////////////////////////////////////////
+			//                                     				//
+			//					Event handlers					//
+			//													//
+			//////////////////////////////////////////////////////
+			
+			protected function init() : void {
+				
+				currentState = "normal";
+				_nextUpdate = new Date();
+							
+				/*if(!CustomStyleManager.loadStyles()) {
+				CustomStyleManager.saveStyles();
+				}*/
+				
+			}
+			
+			
+			
+			protected function creationComplatedHandler() : void {
+				
+				/* Scale fonts to screen size */
+				scaleStyles();
+				
+				/* Fill currencies popup */
+				for( var i:uint = 0; i<Constants.CURRENCIES.length; i++ ) {
+					
+					var label:Label = new Label();
+					label.text = Constants.CURRENCIES[i];
+					label.styleName = "fontBig";
+					label.addEventListener(MouseEvent.CLICK,function(e:Event) : void {
+						currencyPopUp.displayPopUp = false;
+						currency = e.target.text.toUpperCase();
+					});
+					
+					currencyChooser.addElement(label);
+				}				
+				
+				chartType = Constants.GOLD;
+				currency = "USD";
+				weightUnits = Constants.UNITS_OZ;
+				dataRange = Constants.RANGE_1DAY;		
+				
+				/* Initialize gestures support */
+				chart.addEventListener(TransformGestureEvent.GESTURE_ZOOM,chartZoomGestureHandler);
+				chart.addEventListener(TransformGestureEvent.GESTURE_PAN,chartPanGestureHandler);	
+				Multitouch.inputMode = MultitouchInputMode.GESTURE;
+				
+				/* Initialize data provider */
+				_dataProvider = new DATA_PROVIDER_CLASS();
+				_dataProvider.addEventListener( "newData", newDataHandler );
+				
+				/* Initialize timer */
+				_timer.addEventListener( TimerEvent.TIMER,timerHandler );
+				_timer.start();
+				
+			}
+			
+			protected function resizeHandler() : void {
+				
+			}	
+			
+			protected function newDataHandler( e:Event ) : void {
+				
+				updateChartData();			
+				_nextUpdate = _dataProvider.getNextUpdateTime();
+				
+				busy = false;
+				
+			}
+			
+			protected function timerHandler( e:Event ) : void {
+				
+				updateHeader();
+				
+			}
+			
+			protected function mouseWheelHandler( e:Event ) : void {
+				zoom(e["delta"] > 0 ? 1 + e["delta"]/24 : 1/(1 - e["delta"]/24) );
+			}
+			
+			protected function chartZoomGestureHandler( e:TransformGestureEvent ) : void {
+				
+				zoom(e.scaleX);
+				
+			}
+			
+			protected function chartPanGestureHandler( e:TransformGestureEvent ) : void {
+				
+				pan(e.offsetX);
+				
+			}			
+			
+			
+		]]>
+	</fx:Script>
+	
+	<!--
+	
+	//////////////////////////////////////////////////////
+	//                                     				//
+	//						Skin						//
+	//													//
+	//////////////////////////////////////////////////////
+	
+	-->
+	
+	<s:VGroup id="normalVGroup" width="100%" height="100%">
+		
+		<s:VGroup id="northPanel" width="100%" excludeFrom="settings">
+		
+			<s:Label id="headerLabel" width="100%" text="Next Live Price Update" styleName="fontBig" />
+			
+			<s:HGroup id="metalBtnGroup" width="100%" verticalAlign="middle" excludeFrom="fullscreen,settings">
+				
+				<s:VGroup width="100%">	
+					
+					<s:HGroup width="100%">
+						<!-- Curency button -->
+						<s:Button id="currencyBtn" label="USD" width="100%" styleName="button fontMedium" click="popupFill.color = currencyBtn.getStyle('chromeColor'), currencyPopUp.displayPopUp = true" />	
+						<!-- Metal buttons-->
+						<s:RadioButton id="goldBtn" group="{chartTypeRadioGroup}" value="{Constants.GOLD}" width="100%" styleName="button fontMedium" label="Gld:" />
+						<s:RadioButton id="silverBtn" group="{chartTypeRadioGroup}" value="{Constants.SILVER}" width="100%" styleName="button fontMedium" label="Slv:" />
+						<s:RadioButton id="platinumBtn" group="{chartTypeRadioGroup}" value="{Constants.PLATINUM}" width="100%" styleName="button fontMedium" label="Plt:" />
+						<s:RadioButton id="palladiumBtn" group="{chartTypeRadioGroup}" value="{Constants.PALLADIUM}" width="100%" styleName="button fontMedium" label="Pld:" />
+					</s:HGroup>
+					
+					<!-- Currency popup -->
+					<s:PopUpAnchor id="currencyPopUp" popUpPosition="below">
+						<s:TileGroup width="{width/2}" height="{height/2}" id="currencyChooser" includeInLayout="false" clipAndEnableScrolling="true">
+							<s:Rect x="0" y="0" width="{width/2}" height="{height/2}" includeInLayout="false">
+								<s:fill>
+									<s:SolidColor id="popupFill" color="{getStyle('backgroundColor')}" alpha="0.8"/>
+								</s:fill>
+							</s:Rect>
+						</s:TileGroup>
+					</s:PopUpAnchor>
+					
+				</s:VGroup>				
+				
+				<s:Spacer width="10"/>
+				
+				<!-- Units radio group -->
+				<s:VGroup width="0%" styleName="fontSmall" >			
+					<s:RadioButton id="radioOunce" group="{unitsRedioGroup}" label="OZ" value="{Constants.UNITS_OZ}" toolTip="Ounces" />
+					<s:RadioButton id="radioGram" group="{unitsRedioGroup}" label="GR" value="{Constants.UNITS_GR}" toolTip="Grams" />
+				</s:VGroup>
+				
+			</s:HGroup>	
+		
+		</s:VGroup>
+
+		<!-- Chart -->
+		
+		<s:Label id="chartLabel" width="100%" textAlign="center" styleName="fontMedium" />
+		
+		<mx:LineChart id="chart" width="100%" height="100%" cacheAsBitmap="true" showDataTips="true" mouseWheel="mouseWheelHandler(event)" >
+			
+			<!-- Vertical Axis -->
+			<mx:verticalAxis>
+				<mx:LinearAxis id="varticalAxis" baseAtZero="false" />
+			</mx:verticalAxis>
+			<mx:verticalAxisRenderers>					
+				<mx:AxisRenderer id="verticalAxisRenderer" axis="{varticalAxis}" styleName="fontSmall">
+					<mx:axisStroke>
+						<mx:SolidColorStroke id="varticalAxisStroke" weight="1" color="yellow"/>
+					</mx:axisStroke>							
+				</mx:AxisRenderer>
+			</mx:verticalAxisRenderers>	
+			
+			<!-- Horizontal Axis -->
+			<mx:horizontalAxis>
+				<mx:LinearAxis id="horizontalAxis" title="Date" baseAtZero="true" maximum="{24*60}" labelFunction="{hLabelFunction}"/>
+			</mx:horizontalAxis>
+			<mx:horizontalAxisRenderers>					
+				<mx:AxisRenderer id="horizontalAxisRenderer" axis="{horizontalAxis}" styleName="fontSmall" >
+					<mx:axisStroke>
+						<mx:SolidColorStroke id="horizontalAxisStroke" weight="1" color="yellow"/>
+					</mx:axisStroke>							
+				</mx:AxisRenderer>
+			</mx:horizontalAxisRenderers>
+			
+			<!-- Grid -->
+			<mx:backgroundElements>
+				<mx:GridLines id="gridlines" horizontalChangeCount="1" verticalChangeCount="1"  >
+					<mx:horizontalStroke>
+						<mx:SolidColorStroke id="horLine" color="0x999999" />						
+					</mx:horizontalStroke>
+					<mx:verticalStroke>
+						<mx:SolidColorStroke id="verLine" color="0x999999" />
+					</mx:verticalStroke>
+					<mx:horizontalFill>
+						<mx:SolidColor id="horFill" />
+					</mx:horizontalFill>
+					<mx:verticalFill>
+						<mx:SolidColor id="verFill" />
+					</mx:verticalFill>
+				</mx:GridLines>			
+			</mx:backgroundElements>
+			
+			<!-- Series -->
+			<mx:series>
+				<mx:LineSeries id="serie1" interpolateValues="true" xField="time" yField="value" selectable="true">
+					<mx:lineStroke>
+						<s:SolidColorStroke id="serie1LineStroke" weight="1" color="{getStyle('serie1Color')}" />
+					</mx:lineStroke>		
+				</mx:LineSeries>
+				<mx:LineSeries id="serie2" interpolateValues="true" lineStroke="{serie2LineStroke}" xField="time" yField="value" selectable="true" />
+				<mx:LineSeries id="serie3" interpolateValues="true" lineStroke="{serie3LineStroke}" xField="time" yField="value" selectable="true" />	
+			</mx:series>
+			
+		</mx:LineChart>
+		
+		<!-- Chart options group -->
+		
+		<s:VGroup id="southPanel" width="100%" excludeFrom="settings, fullscreen">
+			
+			<s:HGroup id="chartDataBtnGroup" width="100%" verticalAlign="middle" >
+				
+				<!-- Chart data range buttons -->
+				<s:ButtonBar id="dataRangeBar" requireSelection="true" change="dataRange = dataRangeBar.selectedIndex" styleName="button fontMedium" width="200%">
+					<s:ArrayCollection source="['Last 3 Days','Today','History']"/>
+				</s:ButtonBar>
+				
+				<s:Spacer width="10"/>
+				
+				<!-- Prices ratio buttons -->
+				<s:RadioButton id="gldslvratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_SLV_RATIO}" label="Gld/Slv Ratio" width="100%" styleName="button fontMedium" />				
+				<s:RadioButton id="gldpltratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_PLT_RATIO}" label="Gld/Plt Ratio" width="100%" styleName="button fontMedium" />
+				
+				<s:Spacer width="10"/>
+				
+				<s:Button id="settingsBtn" label="Settings" width="100%" styleName="button fontMedium" click="currentState = 'settings'" />
+				
+			</s:HGroup>
+			
+			<!-- Track your stack -->
+			
+			<s:Label id="trackYourStackLabel" text="Track Your Stack" styleName="fontMedium" />
+			
+			<s:HGroup id="trackYourStackGroup" width="100%" verticalAlign="justify" >
+				
+				<s:VGroup width="20%" height="100%" >
+					<s:Label id="pmcGoldLabel" text="GOLD ounces:" styleName="fontSmall" />
+					<s:TextInput id="goldOzCalc" maxChars="6" text="0.00" height="32" width="100" />
+					<s:Label id="accGold" text="0.00" styleName="fontSmall" />				
+				</s:VGroup>
+				<s:VGroup width="20%" height="100%" >
+					<s:Label id="pmcSilverLabel" text="SILVER ounces:" styleName="fontSmall" />
+					<s:TextInput id="silverOzCalc" maxChars="6" text="0.00" height="32" width="100" />
+					<s:Label id="accSilver" text="0.00" styleName="fontSmall" />				
+				</s:VGroup>
+				<s:VGroup width="20%" height="100%" >
+					<s:Label id="pmcPlatinumLabel" text="PLATINUM ounces:" styleName="fontSmall" />
+					<s:TextInput id="platinumOzCalc" maxChars="6" text="0.00" height="32" width="100" />
+					<s:Label id="accPlatinum" text="0.00" styleName="fontSmall" />				
+				</s:VGroup>
+				<s:VGroup width="20%" height="100%" >
+					<s:Label id="pmcPalladiumLabel" text="PALLADIUM ounces:" styleName="fontSmall" />
+					<s:TextInput id="palladiumOzCalc" maxChars="6" text="0.00" height="32" width="100" />
+					<s:Label id="accPalladium" text="0.00" styleName="fontSmall" />				
+				</s:VGroup>
+				<s:Spacer width="10"/>
+				<s:VGroup width="20%" height="100%">
+					<s:Label text="" styleName="fontSmall" />
+					<s:Button id="indivChartBtn" label="Chart My Stack!" styleName="button fontMedium" />
+					<s:Label id="totalWorth" text="0.00" styleName="fontSmall" />				
+				</s:VGroup>		
+				
+			</s:HGroup>
+			
+		</s:VGroup>
+		
+		<!-- Settings screen -->
+		
+		<s:HGroup id="settingsHGroup" width="100%" includeIn="settings" >
+			<gpc:SettingsPanel id="settingsPanel"/>
+			<s:VGroup>
+				<s:Button id="cancelBtn" label="Reset" styleName="button fontMedium" width="100%" click="settingsPanel.reset()" />
+				<s:Button id="okBtn" label="OK" styleName="button fontMedium" width="100%" click="CustomStyleManager.saveStyles(); currentState = 'normal'" />
+				<s:Spacer height="100%"/>
+			</s:VGroup>
+		</s:HGroup>	
+		
+	</s:VGroup>
+	
+
+	<!-- Busy screen -->
+	
+	<s:HGroup x="0" y="0" width="{width}" height="{height}" includeInLayout="false" excludeFrom="settings">
+		<s:Spacer width="25%"/>
+		<s:VGroup width="50%" height="100%">
+			<s:Spacer height="20%"/>
+			<s:BusyIndicator id="throbber" alpha="0.5" visible="true" width="100%" height="60%"/>
+			<s:Spacer height="20%"/>			
+		</s:VGroup>
+		<s:Spacer width="25%"/>
+	</s:HGroup>	
+	
+</s:Application>
