@@ -22,16 +22,10 @@
 		<nature>com.adobe.flexbuilder.project.flexnature</nature>
 		<nature>com.adobe.flexbuilder.project.actionscriptnature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>[source path] mx</name>
-			<type>2</type>
-			<location>/Applications/Adobe Flash Builder 4.6/sdks/4.6.0_AIR3.5/frameworks/projects/mx/src/mx</location>
-		</link>
-		<link>
-			<name>bin-debug</name>
-			<type>2</type>
-			<location>/Users/pawelbardzinski/blaze/tomcat/webapps/alive5/test_old_design-debug</location>
-		</link>
-	</linkedResources>
+	<variableList>
+		<variable>
+			<name>TOMCAT_PATH</name>
+			<value>file:/C:/Users/Rurka/Documents/goldpricecafe/blazeds-turnkey-4.0.0.14931/tomcat</value>
+		</variable>
+	</variableList>
 </projectDescription>

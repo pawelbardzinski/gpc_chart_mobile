@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:gpc="com.goldpricecafe.mobile.*"
+		 width="100%" height="100%"
+		 creationComplete="creationCompleteHandler(event)">
+	
+	<s:layout>
+		<s:HorizontalLayout/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+
+			import mx.events.FlexEvent;			
+			
+			//////////////////////////////////////////////////////
+			//                                     				//
+			//					Public							//
+			//													//
+			//////////////////////////////////////////////////////				
+			
+			public function reset() : void {
+				
+				CustomStyleManager.resetStyles();
+				synchronize();
+				
+			}
+			
+			//////////////////////////////////////////////////////
+			//                                     				//
+			//					Protected						//
+			//													//
+			//////////////////////////////////////////////////////			
+			
+			protected function synchronize() : void {
+				
+				var val:Number;
+				
+				val = Number( CustomStyleManager.getStyle("global","color") );
+				fontColorTI.text = "0x" + val.toString(16).toUpperCase();
+				fontColorTI.setStyle("contentBackgroundColor",val);
+				fontColorTI.setStyle("color",findForeColor(val));
+				
+				val = Number( CustomStyleManager.getStyle("global","borderColor") );
+				borderColorTI.text = "0x" + val.toString(16).toUpperCase();
+				borderColorTI.setStyle("contentBackgroundColor",val);
+				borderColorTI.setStyle("color",findForeColor(val));
+				
+				val = Number( CustomStyleManager.getStyle(".button","chromeColor") );
+				buttonColorTI.text = "0x" + val.toString(16).toUpperCase();
+				buttonColorTI.setStyle("contentBackgroundColor",val);
+				buttonColorTI.setStyle("color",findForeColor(val));
+				
+				val = Number( CustomStyleManager.getStyle(".selected","chromeColor") )
+				highlightColorTI.text = "0x" + val.toString(16).toUpperCase();
+				highlightColorTI.setStyle("contentBackgroundColor",val);
+				highlightColorTI.setStyle("color",findForeColor(val));
+				
+				val = Number( CustomStyleManager.getStyle(".selected","borderColor") )
+				highlightBorderTI.text = "0x" + val.toString(16).toUpperCase();
+				highlightBorderTI.setStyle("contentBackgroundColor",val);
+				highlightBorderTI.setStyle("color",findForeColor(val));				
+				
+				val = Number( CustomStyleManager.getStyle("s|Application","backgroundColor") )
+				backgroundColorTI.text = "0x" + val.toString(16).toUpperCase();
+				backgroundColorTI.setStyle("contentBackgroundColor",val);
+				backgroundColorTI.setStyle("color",findForeColor(val));	
+				
+				val = Number( CustomStyleManager.getStyle("#chartPanel","serie1Color") )
+				serie1ColorTI.text = "0x" + val.toString(16).toUpperCase();
+				serie1ColorTI.setStyle("contentBackgroundColor",val);
+				serie1ColorTI.setStyle("color",findForeColor(val));	
+				
+				val = Number( CustomStyleManager.getStyle("#chartPanel","serie2Color") )
+				serie2ColorTI.text = "0x" + val.toString(16).toUpperCase();
+				serie2ColorTI.setStyle("contentBackgroundColor",val);
+				serie2ColorTI.setStyle("color",findForeColor(val));		
+				
+				val = Number( CustomStyleManager.getStyle("#chartPanel","serie3Color") )
+				serie3ColorTI.text = "0x" + val.toString(16).toUpperCase();
+				serie3ColorTI.setStyle("contentBackgroundColor",val);
+				serie3ColorTI.setStyle("color",findForeColor(val));					
+				
+			}
+			
+			protected function findForeColor( color:uint ) : uint {
+				
+				var red:uint = (color >> 16) & 0xFF;
+				var green:uint = (color >> 8) & 0xFF;
+				var blue:uint = color & 0xFF;
+				 
+				var gray:Number = 1 - ( 0.299 * red + 0.587 * green + 0.114 * blue)/255;
+				
+				if (gray < 0.5)
+					return 0;
+				else
+					return 0xFFFFFF;								
+				
+			}
+
+			//////////////////////////////////////////////////////
+			//                                     				//
+			//					Event handlers					//
+			//													//
+			//////////////////////////////////////////////////////
+			
+			protected function creationCompleteHandler(e:Event) : void {
+				
+				synchronize();
+				
+			}			
+			
+			protected function fontColorHandler(event:Event):void
+			{				
+				CustomStyleManager.setStyle("global","color",fontColorTI.text);	
+				CustomStyleManager.setStyle("s|BusyIndicator","symbolColor",fontColorTI.text);	
+				synchronize();
+			}
+			protected function fontFamilyHandler(event:Event):void
+			{				
+				/*TODO: Implement */
+			}			
+			
+			
+			protected function borderColorHandler(event:Event):void
+			{
+				CustomStyleManager.setStyle("global","borderColor",borderColorTI.text);
+				synchronize();
+			}
+			
+			protected function backgroundColorHandler(event:Event):void
+			{
+				CustomStyleManager.setStyle("s|Application","backgroundColor",buttonColorTI.text);
+				synchronize();
+			}
+			
+			protected function buttonColorHandler(event:Event):void
+			{
+				CustomStyleManager.setStyle(".button","chromeColor",buttonColorTI.text);
+				CustomStyleManager.setStyle("s|Button","chromeColor",buttonColorTI.text);
+				synchronize();
+			}
+			
+			protected function highlightColorHandler(event:Event):void
+			{
+				CustomStyleManager.setStyle(".selected","chromeColor",highlightColorTI.text);
+				synchronize();
+			}
+			
+			protected function highlightBorderHandler(event:Event):void
+			{
+				CustomStyleManager.setStyle(".selected","borderColor",highlightBorderTI.text);
+				synchronize();
+			}			
+			
+			protected function serie1ColorHandler(event:Event):void
+			{
+				CustomStyleManager.setStyle("#chartPanel","serie1Color",serie1ColorTI.text);
+				synchronize();
+			}
+			
+			protected function serie1WeightHandler(event:Event):void
+			{
+				/*TODO: Implement */
+			}			
+			
+			protected function serie2ColorHandler(event:Event):void
+			{
+				CustomStyleManager.setStyle("#chartPanel","serie2Color",serie2ColorTI.text);
+				synchronize();
+			}
+			
+			protected function serie2WeightHandler(event:Event):void
+			{
+				/*TODO: Implement */
+			}			
+			
+			protected function serie3ColorHandler(event:Event):void
+			{
+				CustomStyleManager.setStyle("#chartPanel","serie3Color",serie3ColorTI.text);
+				synchronize();
+			}
+			
+			protected function serie3WeightHandler(event:Event):void
+			{
+				/*TODO: Implement */
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:VGroup id="settingsLabelsGroup" height="100%">
+		<s:Spacer height="100%"/>
+		<s:Label text="Fonts" styleName="fontMedium"/>
+		<s:Spacer height="200%"/>
+		<s:Label text="Borders" styleName="fontMedium"/>
+		<s:Spacer height="200%"/>
+		<s:Label text="Background" styleName="fontMedium"/>
+		<s:Spacer height="200%"/>
+		<s:Label text="Buttons" styleName="fontMedium"/>	
+		<s:Spacer height="200%"/>
+		<s:Label text="Selected color" styleName="fontMedium"/>
+		<s:Spacer height="200%"/>
+		<s:Label text="Selected border" styleName="fontMedium"/>
+		<s:Spacer height="200%"/>
+		<s:Label text="Serie 1" styleName="fontMedium"/>
+		<s:Spacer height="200%"/>
+		<s:Label text="Serie 2" styleName="fontMedium"/>
+		<s:Spacer height="200%"/>
+		<s:Label text="Serie 3" styleName="fontMedium"/>
+		<s:Spacer height="100%"/>		
+	</s:VGroup>
+	<s:Spacer width="20" />
+	<s:VGroup id="settingsValuesGroup" height="100%" width="100%">
+		<s:HGroup width="100%" height="100%">
+			<s:TextInput id="fontColorTI" width="70%" height="100%" focusOut="fontColorHandler(event)" enter="fontColorHandler(event)"/>
+			<gpc:HSpinner id="fontFamilySpinner" width="40%" height="100%" change="fontFamilyHandler(event)">
+				<s:ArrayCollection source="[Michroma]"/>
+			</gpc:HSpinner>
+		</s:HGroup>
+		<s:TextInput id="borderColorTI" width="100%" height="100%" focusOut="borderColorHandler(event)" enter="borderColorHandler(event)"/>	
+		<s:TextInput id="backgroundColorTI" width="100%" height="100%" focusOut="backgroundColorHandler(event)" enter="backgroundColorHandler(event)"/>
+		<s:TextInput id="buttonColorTI" width="100%" height="100%" focusOut="buttonColorHandler(event)" enter="buttonColorHandler(event)"/>	
+		<s:TextInput id="highlightColorTI" width="100%" height="100%" focusOut="highlightColorHandler(event)" enter="highlightColorHandler(event)"/>
+		<s:TextInput id="highlightBorderTI" width="100%" height="100%" focusOut="highlightBorderHandler(event)" enter="highlightBorderHandler(event)"/>	
+		<s:HGroup width="100%" height="100%">
+			<s:TextInput id="serie1ColorTI" width="70%" height="100%" focusOut="serie1ColorHandler(event)" enter="serie1ColorHandler(event)"/>
+			<gpc:HSpinner id="serie1ColorWeightSpinner" width="40%" height="100%" change="serie1WeightHandler(event)">
+				<s:ArrayCollection source="[1,2,3,4]"/>
+			</gpc:HSpinner>
+		</s:HGroup>		
+		<s:HGroup width="100%" height="100%">
+			<s:TextInput id="serie2ColorTI" width="70%" height="100%" focusOut="serie2ColorHandler(event)" enter="serie2ColorHandler(event)"/>
+			<gpc:HSpinner id="serie2ColorWeightSpinner" width="40%" height="100%" change="serie2WeightHandler(event)">
+				<s:ArrayCollection source="[1,2,3,4]"/>
+			</gpc:HSpinner>
+		</s:HGroup>
+		<s:HGroup width="100%" height="100%">
+			<s:TextInput id="serie3ColorTI" width="70%" height="100%" focusOut="serie3ColorHandler(event)" enter="serie3ColorHandler(event)"/>
+			<gpc:HSpinner id="serie3ColorWeightSpinner" width="40%" height="100%" change="serie3WeightHandler(event)">
+				<s:ArrayCollection source="[1,2,3,4]"/>
+			</gpc:HSpinner>
+		</s:HGroup>		
+	</s:VGroup>
+	
+</s:Group>

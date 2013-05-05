@@ -1,0 +1,114 @@
+/* CSS for goldpricecafe mobile application */
+@namespace s "library://ns.adobe.com/flex/spark";
+
+
+/* Fonts */
+
+@font-face {
+	src: url("Michroma.ttf");
+	fontFamily: michromaCFF;
+	fontWeight: normal;	
+	embedAsCFF: true;
+}
+
+@font-face {
+	src: url("Michroma.ttf");
+	fontFamily: michroma;
+	fontWeight: normal;	
+	embedAsCFF: false;
+}
+
+/* Custom skins */
+
+s|Button, s|RadioButton.button
+{
+	skinClass: ClassReference("com.goldpricecafe.mobile.skins.CustomButtonSkin");
+}
+
+#currencyBtn {
+	skinClass: ClassReference("com.goldpricecafe.mobile.skins.DropdownButtonSkin");
+}
+
+s|DropDownList 
+{
+	skinClass: ClassReference("com.goldpricecafe.mobile.skins.DropDownListMobileSkin");		
+}
+
+s|ButtonBar 
+{
+	skinClass: ClassReference("com.goldpricecafe.mobile.skins.ButtonBarSkin");
+}
+
+/* Common styles */
+global {
+	
+	/* Colors */
+	color: #EEDD00;
+	borderColor: #998800;
+	
+}
+
+s|BusyIndicator {
+	
+	symbolColor: #EEDD00; 
+	
+}
+
+.button, s|Button {
+	
+	fontFamily: michroma;
+	embedFonts: true;
+	fontWeight: normal;	
+	fontStyle: normal;
+	chromeColor: #121212;
+	borderWidth: 1;
+	
+}
+
+s|Application {
+	backgroundColor: #000000;	
+}
+
+#chartPanel {
+	serie1Color: #FFFF00;
+	serie2Color: #AAAA00;
+	serie3Color: #777700;		
+}
+
+s|Label 
+{
+	/* s:Label requires embedAsCFF */
+	fontFamily: michromaCFF;	
+}
+
+s|TextInput {
+	color: #998800; 
+	contentBackgroundColor: #151515;
+	textAlign: right;
+}
+
+
+.selected 
+{
+	chromeColor: #121212;
+	borderColor: #FFFF00; 
+	borderWidth: 2;
+}
+
+/* Font sizes */
+
+.fontBig {
+	fontSize: 20;
+}
+
+.fontMedium {
+	fontSize: 12;
+}
+
+.fontSmall {
+	fontSize: 8;
+}
+
+
+
+
