@@ -66,10 +66,20 @@
 				backgroundColorTI.setStyle("contentBackgroundColor",val);
 				backgroundColorTI.setStyle("color",findForeColor(val));	
 				
-				val = Number( CustomStyleManager.getStyle("s|Application","serie1Color") )
+				val = Number( CustomStyleManager.getStyle("#chartPanel","serie1Color") )
 				serie1ColorTI.text = "0x" + val.toString(16).toUpperCase();
 				serie1ColorTI.setStyle("contentBackgroundColor",val);
 				serie1ColorTI.setStyle("color",findForeColor(val));	
+				
+				val = Number( CustomStyleManager.getStyle("#chartPanel","serie2Color") )
+				serie2ColorTI.text = "0x" + val.toString(16).toUpperCase();
+				serie2ColorTI.setStyle("contentBackgroundColor",val);
+				serie2ColorTI.setStyle("color",findForeColor(val));		
+				
+				val = Number( CustomStyleManager.getStyle("#chartPanel","serie3Color") )
+				serie3ColorTI.text = "0x" + val.toString(16).toUpperCase();
+				serie3ColorTI.setStyle("contentBackgroundColor",val);
+				serie3ColorTI.setStyle("color",findForeColor(val));					
 				
 			}
 			
@@ -145,7 +155,7 @@
 			
 			protected function serie1ColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("s|Application","serie1Color",serie1ColorTI.text);
+				CustomStyleManager.setStyle("#chartPanel","serie1Color",serie1ColorTI.text);
 				synchronize();
 			}
 			
@@ -156,7 +166,7 @@
 			
 			protected function serie2ColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("s|Application","serie2Color",serie1ColorTI.text);
+				CustomStyleManager.setStyle("#chartPanel","serie2Color",serie2ColorTI.text);
 				synchronize();
 			}
 			
@@ -167,7 +177,7 @@
 			
 			protected function serie3ColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("s|Application","serie3Color",serie1ColorTI.text);
+				CustomStyleManager.setStyle("#chartPanel","serie3Color",serie3ColorTI.text);
 				synchronize();
 			}
 			

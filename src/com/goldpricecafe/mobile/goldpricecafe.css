@@ -66,10 +66,13 @@ s|BusyIndicator {
 }
 
 s|Application {
-	backgroundColor: #000000;
-	serie1Color: red;
-	serie2Color: yellow;
-	serie3Color: yellow;	
+	backgroundColor: #000000;	
+}
+
+#chartPanel {
+	serie1Color: #FFFF00;
+	serie2Color: #AAAA00;
+	serie3Color: #777700;		
 }
 
 s|Label 

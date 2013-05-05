@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
-			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   
 			   xmlns:s="library://ns.adobe.com/flex/spark" 
 			   xmlns:gpc="com.goldpricecafe.mobile.*" 
 			   applicationDPI="160"
@@ -19,7 +19,7 @@
 	
 	<fx:Style source="goldpricecafe.css"/>
 	<fx:Metadata>
-		[Style(name="serie1Color",type="Number",format="Color",inherit="yes")]
+		
 	</fx:Metadata>
 	
 	<s:states>
@@ -32,8 +32,6 @@
 		
 		<s:RadioButtonGroup id="unitsRedioGroup" change="weightUnits = unitsRedioGroup.selectedValue.toString()" />
 		<s:RadioButtonGroup id="chartTypeRadioGroup" change="chartType = chartTypeRadioGroup.selectedValue.toString()" />
-		<s:SolidColorStroke id="serie2LineStroke" weight="1" color="yellow" />
-		<s:SolidColorStroke id="serie3LineStroke" weight="1" color="yellow" />
 		
 	</fx:Declarations>
 	
@@ -41,9 +39,7 @@
 
 		<![CDATA[	
 
-			import com.goldpricecafe.mobile.Constants;
-			
-			import mx.charts.chartClasses.IAxis;
+			import com.goldpricecafe.mobile.Constants;			
 			import mx.collections.ArrayList;
 			import mx.events.FlexEvent;
 			
@@ -62,9 +58,9 @@
 			[Bindable]
 			public function set chartType( type:String ) : void {
 				
-				_chartType = type;		
+				_chartType = type;
+				chartPanel.chartType = type;
 				chartTypeRadioGroup.selectedValue = type;
-				updateChartTitle();	
 				updateChartData();
 				
 			}	
@@ -81,8 +77,9 @@
 			public function set weightUnits( units:String ) : void {
 				
 				_weightUnits = units;
+				chartPanel.weightUnits = units;
 				unitsRedioGroup.selectedValue = units;
-				updateChartTitle();
+				
 				updateChartData();
 				
 			}	
@@ -100,19 +97,7 @@
 				
 				_dataRange = range;
 				dataRangeBar.selectedIndex = range;
-				updateChartTitle();
-				
-				switch( range ) {
-					case Constants.RANGE_1DAY:
-						serie2.visible = serie3.visible = false;
-						break;
-					case Constants.RANGE_3DAYS:
-						serie2.visible = serie3.visible = true;
-						break;	
-					case Constants.RANGE_HISTORY:
-						serie2.visible = serie3.visible = false;
-						break;					
-				}				
+				chartPanel.dataRange = range;				
 				
 			}
 			public function get dataRange() : uint {
@@ -127,10 +112,10 @@
 			public function set currency( currency:String ) : void {
 				
 				_currency = currency;
+				chartPanel.currency = currency;
 				//currencyCombo.selectedItem = currency;
 				//currencyCombo.prompt = currency.toUpperCase();
 				
-				updateChartTitle();
 				updateChartData();
 				currencyBtn.label = currency;
 				
@@ -218,48 +203,7 @@
 				}
 				
 			}
-			
-			protected function updateChartTitle() : void {
 				
-				var chartTitle:String;
-				var axisTitle:String;
-				
-				if(  _chartType != null && _chartType.length > 0 ) {
-					
-					chartTitle = (_dataRange != Constants.RANGE_HISTORY) ? "Live " : "Historical ";
-					
-					switch(chartType) {
-						
-						case Constants.GLD_PLT_RATIO:
-						case Constants.GLD_SLV_RATIO:
-							
-							chartTitle += (chartType + " Price Ratio");
-							break;
-						
-						default:
-							
-							chartTitle += (chartType + " Price");					
-							
-							if( _currency ) {						
-								chartTitle += " in " + _currency.toUpperCase();
-								axisTitle = _currency.toUpperCase();
-							}
-							if( _weightUnits ) {						
-								chartTitle += "/" + weightUnits.toUpperCase();
-								axisTitle += "/" + weightUnits.toUpperCase();
-							}
-							
-					}
-					
-				} else {
-					chartTitle = "";
-				}
-				
-				chartLabel.text = chartTitle;
-				varticalAxis.title = axisTitle;
-				
-			}
-			
 			protected function scaleStyles() : void {
 				
 				var ratio:Number = unscaledWidth/640.0;
@@ -310,9 +254,9 @@
 					
 				}
 				
-				serie1.dataProvider = data1;				
-				serie2.dataProvider = data2;
-				serie3.dataProvider = data3;				
+				chartPanel.serie1.dataProvider = data1;				
+				chartPanel.serie2.dataProvider = data2;
+				chartPanel.serie3.dataProvider = data3;				
 				
 			}
 			
@@ -390,50 +334,6 @@
 				
 			}
 			
-			public function zoom( ratio:Number ) : void {
-				
-				var delta:Number = ( horizontalAxis.maximum - horizontalAxis.minimum ) * (ratio - 1);
-				var max:Number = horizontalAxis.maximum - delta/2;
-				var min:Number = horizontalAxis.minimum + delta/2;
-				
-				horizontalAxis.minimum = Math.max(0,min);
-				horizontalAxis.maximum = Math.min(max,24*60);
-				
-			}
-			
-			public function pan( offset:Number ) : void {
-				
-				var delta:Number = ( horizontalAxis.maximum - horizontalAxis.minimum ) * (offset / chart.width );
-				var max:Number = horizontalAxis.maximum - delta;
-				var min:Number = horizontalAxis.minimum - delta;	
-				
-				if( min < 0 ) {
-					
-					max = Math.min(24*60,max-min);
-					min = 0;
-					
-				} else if( max > 24*60 ) {
-					
-					min = Math.max(0,min - (max - 24*60));
-					max = 24*60;
-				}
-				
-				horizontalAxis.minimum = min;
-				horizontalAxis.maximum = max;							
-				
-			}
-			
-			public function hLabelFunction( val:Number, prevVal:Number, axis:IAxis ) : String {
-				
-				var hour:int = Math.round(val / 60);
-				var min:int = val % 60;
-				
-				return ((hour < 10) ? "0" + hour.toString() : hour.toString()) + ":" + ((min < 10) ? "0" + min.toString() : min.toString());
-				
-			}
-			
-			
-			
 			//////////////////////////////////////////////////////
 			//                                     				//
 			//					Event handlers					//
@@ -449,9 +349,7 @@
 				CustomStyleManager.saveStyles();
 				}*/
 				
-			}
-			
-			
+			}			
 			
 			protected function creationComplatedHandler() : void {
 				
@@ -478,8 +376,6 @@
 				dataRange = Constants.RANGE_1DAY;		
 				
 				/* Initialize gestures support */
-				chart.addEventListener(TransformGestureEvent.GESTURE_ZOOM,chartZoomGestureHandler);
-				chart.addEventListener(TransformGestureEvent.GESTURE_PAN,chartPanGestureHandler);	
 				Multitouch.inputMode = MultitouchInputMode.GESTURE;
 				
 				/* Initialize data provider */
@@ -510,22 +406,7 @@
 				updateHeader();
 				
 			}
-			
-			protected function mouseWheelHandler( e:Event ) : void {
-				zoom(e["delta"] > 0 ? 1 + e["delta"]/24 : 1/(1 - e["delta"]/24) );
-			}
-			
-			protected function chartZoomGestureHandler( e:TransformGestureEvent ) : void {
-				
-				zoom(e.scaleX);
-				
-			}
-			
-			protected function chartPanGestureHandler( e:TransformGestureEvent ) : void {
-				
-				pan(e.offsetX);
-				
-			}			
+						
 			
 			
 		]]>
@@ -588,64 +469,7 @@
 
 		<!-- Chart -->
 		
-		<s:Label id="chartLabel" width="100%" textAlign="center" styleName="fontMedium" />
-		
-		<mx:LineChart id="chart" width="100%" height="100%" cacheAsBitmap="true" showDataTips="true" mouseWheel="mouseWheelHandler(event)" >
-			
-			<!-- Vertical Axis -->
-			<mx:verticalAxis>
-				<mx:LinearAxis id="varticalAxis" baseAtZero="false" />
-			</mx:verticalAxis>
-			<mx:verticalAxisRenderers>					
-				<mx:AxisRenderer id="verticalAxisRenderer" axis="{varticalAxis}" styleName="fontSmall">
-					<mx:axisStroke>
-						<mx:SolidColorStroke id="varticalAxisStroke" weight="1" color="yellow"/>
-					</mx:axisStroke>							
-				</mx:AxisRenderer>
-			</mx:verticalAxisRenderers>	
-			
-			<!-- Horizontal Axis -->
-			<mx:horizontalAxis>
-				<mx:LinearAxis id="horizontalAxis" title="Date" baseAtZero="true" maximum="{24*60}" labelFunction="{hLabelFunction}"/>
-			</mx:horizontalAxis>
-			<mx:horizontalAxisRenderers>					
-				<mx:AxisRenderer id="horizontalAxisRenderer" axis="{horizontalAxis}" styleName="fontSmall" >
-					<mx:axisStroke>
-						<mx:SolidColorStroke id="horizontalAxisStroke" weight="1" color="yellow"/>
-					</mx:axisStroke>							
-				</mx:AxisRenderer>
-			</mx:horizontalAxisRenderers>
-			
-			<!-- Grid -->
-			<mx:backgroundElements>
-				<mx:GridLines id="gridlines" horizontalChangeCount="1" verticalChangeCount="1"  >
-					<mx:horizontalStroke>
-						<mx:SolidColorStroke id="horLine" color="0x999999" />						
-					</mx:horizontalStroke>
-					<mx:verticalStroke>
-						<mx:SolidColorStroke id="verLine" color="0x999999" />
-					</mx:verticalStroke>
-					<mx:horizontalFill>
-						<mx:SolidColor id="horFill" />
-					</mx:horizontalFill>
-					<mx:verticalFill>
-						<mx:SolidColor id="verFill" />
-					</mx:verticalFill>
-				</mx:GridLines>			
-			</mx:backgroundElements>
-			
-			<!-- Series -->
-			<mx:series>
-				<mx:LineSeries id="serie1" interpolateValues="true" xField="time" yField="value" selectable="true">
-					<mx:lineStroke>
-						<s:SolidColorStroke id="serie1LineStroke" weight="1" color="{getStyle('serie1Color')}" />
-					</mx:lineStroke>		
-				</mx:LineSeries>
-				<mx:LineSeries id="serie2" interpolateValues="true" lineStroke="{serie2LineStroke}" xField="time" yField="value" selectable="true" />
-				<mx:LineSeries id="serie3" interpolateValues="true" lineStroke="{serie3LineStroke}" xField="time" yField="value" selectable="true" />	
-			</mx:series>
-			
-		</mx:LineChart>
+		<gpc:Chart id="chartPanel" />
 		
 		<!-- Chart options group -->
 		
