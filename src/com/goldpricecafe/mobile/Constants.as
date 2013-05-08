@@ -28,7 +28,7 @@ package com.goldpricecafe.mobile
 		public static const UNITS_GR:String = "gr";
 		public static const UNITS_OZ:String = "oz";	
 		
-		public static const GROZ_RATIO:Number = 0.03527394;
+		public static const GROZ_RATIO:Number = 0.03215123943028003729543773912484;
 		
 		/* Screen size */
 		

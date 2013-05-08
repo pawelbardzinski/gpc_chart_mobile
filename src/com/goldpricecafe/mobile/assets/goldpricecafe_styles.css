@@ -1,6 +1,7 @@
 /* CSS for goldpricecafe mobile application */
 @namespace s "library://ns.adobe.com/flex/spark";
 @namespace mx "library://ns.adobe.com/flex/mx";
+@namespace mx "library://ns.adobe.com/flex/mx";
 
 /* Fonts */
 
@@ -20,30 +21,20 @@
 	embedAsCFF: false;
 }
 
-/* Custom skins */
-
-s|Button, s|RadioButton.button
-{
-	skinClass: ClassReference("com.goldpricecafe.mobile.skins.CustomButtonSkin");
+@font-face {
+	src: url("MateSC-Regular.ttf");
+	fontFamily: mateCFF;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: true;
 }
 
-s|RadioButton
-{
-	skinClass: ClassReference("com.goldpricecafe.mobile.skins.CustomRadioButtonSkin");
-}
-
-#currencyBtn {
-	skinClass: ClassReference("com.goldpricecafe.mobile.skins.DropdownButtonSkin");
-}
-
-s|DropDownList 
-{
-	skinClass: ClassReference("com.goldpricecafe.mobile.skins.DropDownListMobileSkin");		
-}
-
-s|ButtonBar 
-{
-	skinClass: ClassReference("com.goldpricecafe.mobile.skins.ButtonBarSkin");
+@font-face {
+	src: url("MateSC-Regular.ttf");
+	fontFamily: mate;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: false;
 }
 
 /* Common styles */
@@ -79,7 +70,6 @@ s|Label
 	fontWeight: normal;	
 	fontStyle: normal;
 	chromeColor: #000000;
-	borderWidth: 1;
 	paddingBottom: 7;
 	paddingTop: 7;	
 	glossiness: 15;
@@ -114,7 +104,7 @@ s|Application {
 	serie1Color: #FFFF00;
 	serie2Color: #AAAA00;
 	serie3Color: #777700;	
-	serie1Width: 1;
+	serie1Width: 2;
 	serie2Width: 1;
 	serie3Width: 1;
 	gridColor: #999999;

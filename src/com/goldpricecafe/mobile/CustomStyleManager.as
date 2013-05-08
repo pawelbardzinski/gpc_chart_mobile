@@ -1,43 +1,25 @@
 package com.goldpricecafe.mobile
 {
+
+	import flash.events.Event;
+	import flash.events.EventDispatcher;
+	import flash.events.IEventDispatcher;
+	
 	import mx.core.FlexGlobals;
+	import mx.events.StyleEvent;
 	import mx.styles.CSSStyleDeclaration;
 	import mx.styles.IStyleManager2;
 	
 	import spark.managers.PersistenceManager;
 
-	public class CustomStyleManager	
+	[Event(name="stylesUpdated", type="flash.events.Event")]
+	public class CustomStyleManager	extends EventDispatcher implements IEventDispatcher
 	{
+		protected static const DEFAULT_STYLE_SWF:String = "com/goldpricecafe/mobile/assets/goldpricecafe_styles.swf";
 		protected static const _styleManager:IStyleManager2 = FlexGlobals.topLevelApplication.styleManager;		
+		protected static const _eventDispacher:IEventDispatcher = new EventDispatcher();
 		protected static const _selectors:Array = ["global",".selected",".button","s|Application","s|TextInput","s|BusyIndicator"];
-		protected static const _styles:Array = ["color","borderColor","chromeColor","fontFamiliy","backgroundColor","symbolColor"];
-		protected static const _defaultStyles:Object = getDefaultStyles();
-		
-		private static function getDefaultStyles() : Object {
-			
-			var styles:Object = {};
-			
-			styles["global"] = {};
-			styles["global"]["color"] = "0xEEDD00";
-			styles["global"]["borderColor"] = "0x998800";					
-			
-			styles[".button"] = {};
-			styles[".button"]["chromeColor"] = "0x121212";
-			
-			styles[".selected"] = {};
-			styles[".selected"]["chromeColor"] = "0x121212";
-			styles[".selected"]["borderColor"] = "0xFFFF00";
-			
-			styles["s|Application"] = {};
-			styles["s|Application"]["backgroundColor"] = "0x0";
-			
-			styles["s|BusyIndicator"] = {};
-			styles["s|BusyIndicator"]["symbolColor"] = "0xEEDD00";
-			
-			return styles;
-			
-		}		
-		
+		protected static const _styles:Array = ["color","borderColor","chromeColor","fontFamiliy","backgroundColor","symbolColor"];						
 		
 		public static function setStyle( selector:String, style:String, value:Object ) : void {
 			
@@ -86,15 +68,20 @@ package com.goldpricecafe.mobile
 		
 		public static function resetStyles() : void {
 					
-			for (var styleDeclaration:String in _defaultStyles) {
-				
-				for( var style:String in _defaultStyles[styleDeclaration] ) {
-					
-					setStyle( styleDeclaration, style, _defaultStyles[styleDeclaration][style] );
-					
-				}
+			if(!_styleManager) {
+				trace("No styleManager");
+				return;
 			}
+			
+			var myEvent:IEventDispatcher = _styleManager.loadStyleDeclarations(DEFAULT_STYLE_SWF);
+			myEvent.addEventListener( StyleEvent.COMPLETE, function() : void {
+				_eventDispacher.dispatchEvent(new Event("stylesUpdated"));
+			});
+
+			
 		}
+		
+		
 		
 		public static function loadStyles() : Boolean {
 			
@@ -151,6 +138,33 @@ package com.goldpricecafe.mobile
 			persistenceManager.setProperty("styles",styles);
 			
 		}
+		
+		public static function addEventListener(type:String, listener:Function, useCapture:Boolean=false, priority:int=0, useWeakReference:Boolean=false):void
+		{
+			_eventDispacher.addEventListener(type, listener, useCapture, priority, useWeakReference);
+		}
+		
+		public static function dispatchEvent(event:Event):Boolean
+		{
+			return _eventDispacher.dispatchEvent(event);
+		}
+		
+		public static function hasEventListener(type:String):Boolean
+		{
+			return _eventDispacher.hasEventListener(type);
+		}
+		
+		public static function removeEventListener(type:String, listener:Function, useCapture:Boolean=false):void
+		{
+			_eventDispacher.removeEventListener(type, listener, useCapture);
+		}
+		
+		public static function willTrigger(type:String):Boolean
+		{
+			return _eventDispacher.willTrigger(type);
+		}
+		
+		
 		
 	}
 }
