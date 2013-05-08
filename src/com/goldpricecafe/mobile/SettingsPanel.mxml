@@ -155,6 +155,10 @@
 			
 			protected function creationCompleteHandler(e:Event) : void {
 				
+				CustomStyleManager.addEventListener("stylesUpdated", function(event:Event) : void {
+					synchronize();
+				} );
+				
 				synchronize();
 				
 			}			
@@ -298,6 +302,6 @@
 				<s:ArrayCollection source="{LINE_WIGHTS}"/>
 			</gpc:HSpinner>
 		</s:HGroup>		
-	</s:VGroup>
+	</s:VGroup>	
 	
 </s:Group>

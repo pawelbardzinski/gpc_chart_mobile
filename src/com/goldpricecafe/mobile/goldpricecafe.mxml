@@ -12,10 +12,12 @@
 	<s:layout>
 		<s:VerticalLayout paddingLeft="2" paddingRight="2" paddingTop="2" paddingBottom="2"/>
 	</s:layout>
+
+	<fx:Style source="com/goldpricecafe/mobile/assets/goldpricecafe_skins.css"/>
+	<fx:Style source="com/goldpricecafe/mobile/assets/goldpricecafe_styles.css"/>
+
 	
-	<fx:Style source="goldpricecafe.css"/>
-	<fx:Metadata>
-		
+	<fx:Metadata>	
 	</fx:Metadata>
 	
 	<s:states>
@@ -28,14 +30,25 @@
 		
 		<s:RadioButtonGroup id="unitsRedioGroup" change="weightUnits = unitsRedioGroup.selectedValue.toString()" />
 		<s:RadioButtonGroup id="chartTypeRadioGroup" change="chartType = chartTypeRadioGroup.selectedValue.toString()" />
-		<mx:CurrencyFormatter id="buttonsCurrFormat" 
-							  currencySymbol="" 
-							  decimalSeparatorTo="." 
-							  error="0.00" 
-							  precision="2" 
-							  thousandsSeparatorTo="," 
-							  useThousandsSeparator="true" 
-							  useNegativeSign="false" />
+		<s:NumberFormatter  id="buttonsCurrFormat"						  
+							  decimalSeparator="." 
+							  errorText="0.00" 
+							  fractionalDigits="2" 
+							  useGrouping="true"
+							  groupingSeparator="," />
+		<s:NumberFormatter id="amountFormatOz"  
+							  decimalSeparator="." 
+							  errorText="0.00" 
+							  fractionalDigits="2" 
+							  useGrouping="true"
+							  groupingSeparator=","/>
+		<s:NumberFormatter id="amountFormatGr" 
+							  decimalSeparator="." 
+							  errorText="0.00" 
+							  fractionalDigits="4" 
+							  useGrouping="true"
+							  groupingSeparator="," />		
+		
 		<s:Animate id="fader"
 				   duration="500"
 				   repeatBehavior="reverse"
@@ -48,11 +61,11 @@
 	<fx:Script>
 
 		<![CDATA[	
-
 			import com.goldpricecafe.mobile.Constants;
 			
 			import mx.collections.ArrayList;
 			import mx.events.FlexEvent;
+			import mx.events.PropertyChangeEvent;
 			
 			protected static const DATA_PROVIDER_CLASS:Class = com.goldpricecafe.mobile.DataProvider;
 			
@@ -91,6 +104,7 @@
 				chartPanel.weightUnits = units;
 				unitsRedioGroup.selectedValue = units;
 				
+				updateMyStack();
 				updateChartData();
 				
 			}	
@@ -137,6 +151,32 @@
 				
 			}
 			
+			/** Sets gold ammount of "My Stack" expressed in current weight units.
+			 *  Internaly it is stored in ounces.
+			 */
+			[Bindable]
+			public function set myStackGold( val:Number ) : void {
+				
+				if (weightUnits == Constants.UNITS_GR ) {
+					_myStackGldOz = val * Constants.GROZ_RATIO;
+				} else {
+					_myStackGldOz = val;
+				}
+				
+				dispatchEvent( new PropertyChangeEvent("myStackGoldValueChanged",false,false,null,"myStackGoldValue"));
+				
+			}
+			public function get myStackGold() : Number {
+				
+				if (weightUnits == Constants.UNITS_GR ) {
+					return _myStackGldOz / Constants.GROZ_RATIO;
+				} else {
+					return _myStackGldOz;
+				}
+				
+			}	
+			
+			
 			[Bindable]
 			public function set busy( val:Boolean ) : void {
 				
@@ -146,6 +186,7 @@
 				
 				return throbber.visible;
 			}
+			
 			
 			//////////////////////////////////////////////////////
 			//                                     				//
@@ -181,6 +222,14 @@
 			protected var _gldSlvRatios:Array;
 			protected var _gldPltRatios:Array;
 			protected var _gldPldRatios:Array;
+			protected var _gldPrice:Number;
+			
+			/* My stack */
+			
+			protected var _myStackGldOz:Number = 0;
+			protected var _myStackSlvOz:Number = 0;
+			protected var _myStackPldOz:Number = 0;
+			protected var _myStackPltOz:Number = 0;
 			
 			/* Next update */
 			
@@ -267,6 +316,34 @@
 				
 			}
 			
+			protected function updateMyStack() : void {
+				
+				var fract:uint;
+				var formater:NumberFormatter;
+				var maxChars:uint;
+				
+				// Number format depends on the weight units
+				if(weightUnits == Constants.UNITS_OZ) {
+					
+					fract = 2;
+					formater = amountFormatOz;
+									
+				} else {
+					
+					fract = 4;
+					formater = amountFormatGr;	
+					
+				}
+				maxChars = 2 + 2*fract;
+				
+				/* Gold */
+				pmcGoldLabel.text = 'Gold ' + firstUp(weightUnits) + ':';
+				goldOzCalc.text = formater.format(myStackGold); 
+				accGold.setStyle("maxChars",maxChars);
+				accGold.text = buttonsCurrFormat.format(myStackGold) + ' ' + currency.toUpperCase();	
+				
+			}
+			
 			protected function updateChartData() : void {
 				
 				if( !_dataProvider ) return;
@@ -305,7 +382,7 @@
 				
 				updateButtons();
 				
-			}
+			}			
 			
 			
 			protected function calculatePrices( index:uint, chartType:String ) : Array {
@@ -381,6 +458,18 @@
 				
 			}
 			
+			protected function firstUp( val:String ) : String {
+				
+				if( val && val.length > 0 ) {
+					
+					return val.substr(0,1).toUpperCase() +  val.substring(1);
+					
+				} else {
+					
+					return val;
+				}
+			}			
+			
 			//////////////////////////////////////////////////////
 			//                                     				//
 			//					Event handlers					//
@@ -420,7 +509,7 @@
 				chartType = Constants.GOLD;
 				currency = "USD";
 				weightUnits = Constants.UNITS_OZ;
-				dataRange = Constants.RANGE_1DAY;		
+				dataRange = Constants.RANGE_3DAYS;		
 				
 				/* Initialize gestures support */
 				Multitouch.inputMode = MultitouchInputMode.GESTURE;
@@ -555,23 +644,23 @@
 			<s:HGroup id="trackYourStackGroup" width="100%" verticalAlign="justify" >
 				
 				<s:VGroup width="20%" height="100%" gap="2">
-					<s:Label id="pmcGoldLabel" text="Gold Oz:" styleName="fontVerySmall" />
-					<s:TextInput id="goldOzCalc" maxChars="6" text="0.00" height="32" width="100%" />
-					<s:Label id="accGold" text="0.00 USD" styleName="fontVerySmall" />				
+					<s:Label id="pmcGoldLabel" styleName="fontVerySmall" />
+					<s:TextInput id="goldOzCalc" maxChars="6" styleName="fontSmall" width="100%" change="{myStackGold = parseFloat(goldOzCalc.text)}" />
+					<s:Label id="accGold" styleName="fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
-					<s:Label id="pmcSilverLabel" text="Silver Oz:" styleName="fontVerySmall" />
-					<s:TextInput id="silverOzCalc" maxChars="6" text="0.00" height="32" width="100%" />
+					<s:Label id="pmcSilverLabel" text="{'Silver ' + firstUp(weightUnits) + ':'}" styleName="fontVerySmall" />
+					<s:TextInput id="silverOzCalc" maxChars="6" text="0.00" styleName="fontSmall" width="100%"  />
 					<s:Label id="accSilver" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
-					<s:Label id="pmcPlatinumLabel" text="Platinum Oz:" styleName="fontVerySmall" />
-					<s:TextInput id="platinumOzCalc" maxChars="6" text="0.00" height="32" width="100%" />
+					<s:Label id="pmcPlatinumLabel" text="{'Platinum ' + firstUp(weightUnits) + ':'}" styleName="fontVerySmall" />
+					<s:TextInput id="platinumOzCalc" maxChars="6" text="0.00" styleName="fontSmall" width="100%" />
 					<s:Label id="accPlatinum" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
-					<s:Label id="pmcPalladiumLabel" text="Palladium Oz:" styleName="fontVerySmall" />
-					<s:TextInput id="palladiumOzCalc" maxChars="6" text="0.00" height="32" width="100%" />
+					<s:Label id="pmcPalladiumLabel" text="{'Palladium ' + firstUp(weightUnits) + ':'}" styleName="fontVerySmall" />
+					<s:TextInput id="palladiumOzCalc" maxChars="6" text="0.00" styleName="fontSmall" width="100%" />
 					<s:Label id="accPalladium" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
@@ -609,5 +698,6 @@
 		</s:VGroup>
 		<s:Spacer width="25%"/>
 	</s:HGroup>	
+			
 	
 </s:Application>
