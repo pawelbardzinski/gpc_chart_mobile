@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
-			   
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 		   
 			   xmlns:s="library://ns.adobe.com/flex/spark" 
-			   xmlns:gpc="com.goldpricecafe.mobile.*" 
-			   applicationDPI="160"
-			   height="480" 
-			   width="640"
-			   backgroundColor="black"
+			   xmlns:gpc="com.goldpricecafe.mobile.*" 	
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
 			   preloader="SlicedCirclePreloader"
 			   resizeForSoftKeyboard="true"
 			   initialize="init()" 
@@ -14,7 +10,7 @@
 			   creationComplete="creationComplatedHandler()"  >
 	
 	<s:layout>
-		<s:VerticalLayout paddingLeft="5" paddingRight="5" paddingBottom="5"/>
+		<s:VerticalLayout paddingLeft="2" paddingRight="2" paddingTop="2" paddingBottom="2"/>
 	</s:layout>
 	
 	<fx:Style source="goldpricecafe.css"/>
@@ -32,14 +28,29 @@
 		
 		<s:RadioButtonGroup id="unitsRedioGroup" change="weightUnits = unitsRedioGroup.selectedValue.toString()" />
 		<s:RadioButtonGroup id="chartTypeRadioGroup" change="chartType = chartTypeRadioGroup.selectedValue.toString()" />
-		
+		<mx:CurrencyFormatter id="buttonsCurrFormat" 
+							  currencySymbol="" 
+							  decimalSeparatorTo="." 
+							  error="0.00" 
+							  precision="2" 
+							  thousandsSeparatorTo="," 
+							  useThousandsSeparator="true" 
+							  useNegativeSign="false" />
+		<s:Animate id="fader"
+				   duration="500"
+				   repeatBehavior="reverse"
+				   repeatCount="0">
+			<s:SimpleMotionPath property="alpha" valueFrom="1.0" valueTo="0.0" />
+		</s:Animate>
+
 	</fx:Declarations>
 	
 	<fx:Script>
 
 		<![CDATA[	
 
-			import com.goldpricecafe.mobile.Constants;			
+			import com.goldpricecafe.mobile.Constants;
+			
 			import mx.collections.ArrayList;
 			import mx.events.FlexEvent;
 			
@@ -193,20 +204,54 @@
 				
 				if( sec <= 0 ) {
 					
-					headerLabel.text = "Next Live Price Update: loading...";
+					timeLabel.text = "waiting";
+					fader.end();
+					fader.play([timeLabel]);
 					
 				} else {
 					
-					headerLabel.text = "Next Live Price Update: " + 
-						((min < 10) ? "0" + min.toString() : min.toString()) + ":" +
-						((sec < 10) ? "0" + sec.toString() : sec.toString());
+					fader.end();
+					timeLabel.text = ((min < 10) ? "0" + min.toString() : min.toString()) + ":" +
+									 ((sec < 10) ? "0" + sec.toString() : sec.toString());
 				}
 				
 			}
+			
+			protected function updateButtons() : void {
+				
+				if(!_gldPrices || _gldPrices.length == 0 ) return;
+				
+				var lastPrice:Number;
+				var i:int = _gldPrices.length-1;
+				
+				while( i >= 0 && isNaN(lastPrice = calculatePrices(i, Constants.GOLD )[0]) ) {
+					i--;
+				}
+				goldBtn.label = "Gld: " + buttonsCurrFormat.format(lastPrice);
+				
+				i = _gldPrices.length-1;
+				while( i >= 0 && isNaN(lastPrice = calculatePrices(i, Constants.SILVER )[0]) ) {
+					i--;
+				}
+				silverBtn.label = "Slv: " + buttonsCurrFormat.format(lastPrice);				
+
+				i = _gldPrices.length-1;
+				while( i >= 0 && isNaN(lastPrice = calculatePrices(i, Constants.PLATINUM )[0]) ) {
+					i--;
+				}
+				platinumBtn.label = "Plt: " + buttonsCurrFormat.format(lastPrice);
+				
+				i = _gldPrices.length-1;
+				while( i >= 0 && isNaN(lastPrice = calculatePrices(i, Constants.PALLADIUM )[0]) ) {
+					i--;
+				}
+				palladiumBtn.label = "Plt: " + buttonsCurrFormat.format(lastPrice);				
+			}
+						
 				
 			protected function scaleStyles() : void {
 				
-				var ratio:Number = unscaledWidth/640.0;
+				var ratio:Number = unscaledWidth/1024;
 				
 				if( styleManager ) {
 					
@@ -244,7 +289,7 @@
 						if(i >= _gldPrices.length) break;
 						
 						var time:int = _gldPrices[i][0];
-						var prices:Array = calculatePrices(i);
+						var prices:Array = calculatePrices(i,_chartType);
 						
 						data1.addItem( { "time":time, "value":prices[0] } );
 						data2.addItem( { "time":time, "value":prices[1] } );
@@ -256,12 +301,14 @@
 				
 				chartPanel.serie1.dataProvider = data1;				
 				chartPanel.serie2.dataProvider = data2;
-				chartPanel.serie3.dataProvider = data3;				
+				chartPanel.serie3.dataProvider = data3;	
+				
+				updateButtons();
 				
 			}
 			
 			
-			protected function calculatePrices( index:uint ) : Array {
+			protected function calculatePrices( index:uint, chartType:String ) : Array {
 				
 				
 				if((!_gldPrices) || (index > _gldPrices.length) ) return [null,null,null];
@@ -270,7 +317,7 @@
 				var prices:Array = [null, null, null];
 				var i:uint;
 				
-				switch( _chartType ) {
+				switch( chartType ) {
 					
 					case Constants.GOLD :
 						
@@ -361,7 +408,7 @@
 					
 					var label:Label = new Label();
 					label.text = Constants.CURRENCIES[i];
-					label.styleName = "fontBig";
+					label.styleName = "fontMedium";
 					label.addEventListener(MouseEvent.CLICK,function(e:Event) : void {
 						currencyPopUp.displayPopUp = false;
 						currency = e.target.text.toUpperCase();
@@ -422,11 +469,16 @@
 	
 	-->
 	
-	<s:VGroup id="normalVGroup" width="100%" height="100%">
+	<s:VGroup id="normalVGroup" width="100%" height="100%" gap="0">
 		
-		<s:VGroup id="northPanel" width="100%" excludeFrom="settings">
+		<s:VGroup id="northPanel" width="100%" excludeFrom="settings" gap="0">
 		
-			<s:Label id="headerLabel" width="100%" text="Next Live Price Update" styleName="fontBig" />
+			<s:HGroup width="100%">
+				<s:Label id="headerLabel" text="Next Live Price Update " styleName="fontBig" />
+				<s:Spacer width="100%"/>
+				<s:Label id="timeLabel" styleName="fontBig" />
+			</s:HGroup>
+			
 			
 			<s:HGroup id="metalBtnGroup" width="100%" verticalAlign="middle" excludeFrom="fullscreen,settings">
 				
@@ -434,12 +486,12 @@
 					
 					<s:HGroup width="100%">
 						<!-- Curency button -->
-						<s:Button id="currencyBtn" label="USD" width="100%" styleName="button fontMedium" click="popupFill.color = currencyBtn.getStyle('chromeColor'), currencyPopUp.displayPopUp = true" />	
+						<s:Button id="currencyBtn" minHeight="0" label="USD" width="40%" styleName="button bigButton fontMedium" click="popupFill.color = currencyBtn.getStyle('chromeColor'), currencyPopUp.displayPopUp = true" />	
 						<!-- Metal buttons-->
-						<s:RadioButton id="goldBtn" group="{chartTypeRadioGroup}" value="{Constants.GOLD}" width="100%" styleName="button fontMedium" label="Gld:" />
-						<s:RadioButton id="silverBtn" group="{chartTypeRadioGroup}" value="{Constants.SILVER}" width="100%" styleName="button fontMedium" label="Slv:" />
-						<s:RadioButton id="platinumBtn" group="{chartTypeRadioGroup}" value="{Constants.PLATINUM}" width="100%" styleName="button fontMedium" label="Plt:" />
-						<s:RadioButton id="palladiumBtn" group="{chartTypeRadioGroup}" value="{Constants.PALLADIUM}" width="100%" styleName="button fontMedium" label="Pld:" />
+						<s:RadioButton id="goldBtn" minHeight="0" group="{chartTypeRadioGroup}" value="{Constants.GOLD}" width="100%" styleName="button bigButton fontMedium" label="Gld:" />
+						<s:RadioButton id="silverBtn" minHeight="0" group="{chartTypeRadioGroup}" value="{Constants.SILVER}" width="100%" styleName="button bigButton fontMedium" label="Slv:" />
+						<s:RadioButton id="platinumBtn" minHeight="0" group="{chartTypeRadioGroup}" value="{Constants.PLATINUM}" width="100%" styleName="button bigButton fontMedium" label="Plt:" />
+						<s:RadioButton id="palladiumBtn" minHeight="0" group="{chartTypeRadioGroup}" value="{Constants.PALLADIUM}" width="100%" styleName="button bigButton fontMedium" label="Pld:" />
 					</s:HGroup>
 					
 					<!-- Currency popup -->
@@ -455,12 +507,12 @@
 					
 				</s:VGroup>				
 				
-				<s:Spacer width="10"/>
+				<s:Spacer width="2"/>
 				
 				<!-- Units radio group -->
-				<s:VGroup width="0%" styleName="fontSmall" >			
-					<s:RadioButton id="radioOunce" group="{unitsRedioGroup}" label="OZ" value="{Constants.UNITS_OZ}" toolTip="Ounces" />
-					<s:RadioButton id="radioGram" group="{unitsRedioGroup}" label="GR" value="{Constants.UNITS_GR}" toolTip="Grams" />
+				<s:VGroup width="0%" styleName="fontSmall" gap="5" height="100%">			
+					<s:RadioButton id="radioOunce" group="{unitsRedioGroup}" styleName="radioBtn fontVerySmall" label="OZ" value="{Constants.UNITS_OZ}" toolTip="Ounces" />
+					<s:RadioButton id="radioGram" group="{unitsRedioGroup}" styleName="radioBtn fontVerySmall" label="GR" value="{Constants.UNITS_GR}" toolTip="Grams" />
 				</s:VGroup>
 				
 			</s:HGroup>	
@@ -473,58 +525,60 @@
 		
 		<!-- Chart options group -->
 		
-		<s:VGroup id="southPanel" width="100%" excludeFrom="settings, fullscreen">
+		<s:VGroup id="southPanel" width="100%" excludeFrom="settings, fullscreen" gap="0">
 			
 			<s:HGroup id="chartDataBtnGroup" width="100%" verticalAlign="middle" >
 				
 				<!-- Chart data range buttons -->
-				<s:ButtonBar id="dataRangeBar" requireSelection="true" change="dataRange = dataRangeBar.selectedIndex" styleName="button fontMedium" width="200%">
+				<s:ButtonBar id="dataRangeBar" requireSelection="true" change="dataRange = dataRangeBar.selectedIndex" styleName="button fontSmall" width="200%">
 					<s:ArrayCollection source="['Last 3 Days','Today','History']"/>
 				</s:ButtonBar>
 				
 				<s:Spacer width="10"/>
 				
 				<!-- Prices ratio buttons -->
-				<s:RadioButton id="gldslvratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_SLV_RATIO}" label="Gld/Slv Ratio" width="100%" styleName="button fontMedium" />				
-				<s:RadioButton id="gldpltratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_PLT_RATIO}" label="Gld/Plt Ratio" width="100%" styleName="button fontMedium" />
+				<s:RadioButton id="gldslvratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_SLV_RATIO}" label="Gld/Slv Ratio" width="100%" styleName="button fontSmall" />				
+				<s:RadioButton id="gldpltratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_PLT_RATIO}" label="Gld/Plt Ratio" width="100%" styleName="button fontSmall" />
 				
 				<s:Spacer width="10"/>
 				
-				<s:Button id="settingsBtn" label="Settings" width="100%" styleName="button fontMedium" click="currentState = 'settings'" />
+				<s:Button id="settingsBtn" label="Settings" width="100%" styleName="button fontSmall" click="currentState = 'settings'" />
 				
 			</s:HGroup>
 			
 			<!-- Track your stack -->
+		
+			<s:Spacer height="10"/>
 			
-			<s:Label id="trackYourStackLabel" text="Track Your Stack" styleName="fontMedium" />
+			<s:Label id="trackYourStackLabel" text="Track Your Stack" styleName="fontSmall" />
 			
 			<s:HGroup id="trackYourStackGroup" width="100%" verticalAlign="justify" >
 				
-				<s:VGroup width="20%" height="100%" >
-					<s:Label id="pmcGoldLabel" text="GOLD ounces:" styleName="fontSmall" />
+				<s:VGroup width="20%" height="100%" gap="2">
+					<s:Label id="pmcGoldLabel" text="Gold Oz:" styleName="fontVerySmall" />
 					<s:TextInput id="goldOzCalc" maxChars="6" text="0.00" height="32" width="100" />
-					<s:Label id="accGold" text="0.00" styleName="fontSmall" />				
+					<s:Label id="accGold" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
-				<s:VGroup width="20%" height="100%" >
-					<s:Label id="pmcSilverLabel" text="SILVER ounces:" styleName="fontSmall" />
+				<s:VGroup width="20%" height="100%" gap="2">
+					<s:Label id="pmcSilverLabel" text="Silver Oz:" styleName="fontVerySmall" />
 					<s:TextInput id="silverOzCalc" maxChars="6" text="0.00" height="32" width="100" />
-					<s:Label id="accSilver" text="0.00" styleName="fontSmall" />				
+					<s:Label id="accSilver" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
-				<s:VGroup width="20%" height="100%" >
-					<s:Label id="pmcPlatinumLabel" text="PLATINUM ounces:" styleName="fontSmall" />
+				<s:VGroup width="20%" height="100%" gap="2">
+					<s:Label id="pmcPlatinumLabel" text="Platinum Oz:" styleName="fontVerySmall" />
 					<s:TextInput id="platinumOzCalc" maxChars="6" text="0.00" height="32" width="100" />
-					<s:Label id="accPlatinum" text="0.00" styleName="fontSmall" />				
+					<s:Label id="accPlatinum" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
-				<s:VGroup width="20%" height="100%" >
-					<s:Label id="pmcPalladiumLabel" text="PALLADIUM ounces:" styleName="fontSmall" />
+				<s:VGroup width="20%" height="100%" gap="2">
+					<s:Label id="pmcPalladiumLabel" text="Palladium Oz:" styleName="fontVerySmall" />
 					<s:TextInput id="palladiumOzCalc" maxChars="6" text="0.00" height="32" width="100" />
-					<s:Label id="accPalladium" text="0.00" styleName="fontSmall" />				
+					<s:Label id="accPalladium" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
 				<s:Spacer width="10"/>
-				<s:VGroup width="20%" height="100%">
-					<s:Label text="" styleName="fontSmall" />
-					<s:Button id="indivChartBtn" label="Chart My Stack!" styleName="button fontMedium" />
-					<s:Label id="totalWorth" text="0.00" styleName="fontSmall" />				
+				<s:VGroup width="20%" height="100%" gap="2">
+					<s:Spacer height="100%"/>
+					<s:Button id="indivChartBtn" label="Chart My Stack!" styleName="button bigButton fontMedium"/>
+					<s:Label id="totalWorth" text="Total: 0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>		
 				
 			</s:HGroup>
