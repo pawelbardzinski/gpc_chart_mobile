@@ -534,13 +534,13 @@
 					<s:ArrayCollection source="['Last 3 Days','Today','History']"/>
 				</s:ButtonBar>
 				
-				<s:Spacer width="10"/>
+				<!--s:Spacer width="10"/-->
 				
 				<!-- Prices ratio buttons -->
 				<s:RadioButton id="gldslvratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_SLV_RATIO}" label="Gld/Slv Ratio" width="100%" styleName="button fontSmall" />				
 				<s:RadioButton id="gldpltratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_PLT_RATIO}" label="Gld/Plt Ratio" width="100%" styleName="button fontSmall" />
 				
-				<s:Spacer width="10"/>
+				<!--s:Spacer width="10"/-->
 				
 				<s:Button id="settingsBtn" label="Settings" width="100%" styleName="button fontSmall" click="currentState = 'settings'" />
 				
@@ -556,25 +556,24 @@
 				
 				<s:VGroup width="20%" height="100%" gap="2">
 					<s:Label id="pmcGoldLabel" text="Gold Oz:" styleName="fontVerySmall" />
-					<s:TextInput id="goldOzCalc" maxChars="6" text="0.00" height="32" width="100" />
+					<s:TextInput id="goldOzCalc" maxChars="6" text="0.00" height="32" width="100%" />
 					<s:Label id="accGold" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
 					<s:Label id="pmcSilverLabel" text="Silver Oz:" styleName="fontVerySmall" />
-					<s:TextInput id="silverOzCalc" maxChars="6" text="0.00" height="32" width="100" />
+					<s:TextInput id="silverOzCalc" maxChars="6" text="0.00" height="32" width="100%" />
 					<s:Label id="accSilver" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
 					<s:Label id="pmcPlatinumLabel" text="Platinum Oz:" styleName="fontVerySmall" />
-					<s:TextInput id="platinumOzCalc" maxChars="6" text="0.00" height="32" width="100" />
+					<s:TextInput id="platinumOzCalc" maxChars="6" text="0.00" height="32" width="100%" />
 					<s:Label id="accPlatinum" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
 					<s:Label id="pmcPalladiumLabel" text="Palladium Oz:" styleName="fontVerySmall" />
-					<s:TextInput id="palladiumOzCalc" maxChars="6" text="0.00" height="32" width="100" />
+					<s:TextInput id="palladiumOzCalc" maxChars="6" text="0.00" height="32" width="100%" />
 					<s:Label id="accPalladium" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
-				<s:Spacer width="10"/>
 				<s:VGroup width="20%" height="100%" gap="2">
 					<s:Spacer height="100%"/>
 					<s:Button id="indivChartBtn" label="Chart My Stack!" styleName="button bigButton fontMedium"/>
