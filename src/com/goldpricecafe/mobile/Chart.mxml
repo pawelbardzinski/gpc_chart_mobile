@@ -8,25 +8,41 @@
 		 gesturePan="panGestureHandler(event)" >
 	
 	<s:layout>
-		<s:VerticalLayout/>
+		<s:VerticalLayout gap="0"/>
 	</s:layout>
 	
 	<fx:Metadata>
+		[Style(name="axisColor",type="Number",format="Color",inherit="yes")]
+		[Style(name="gridColor",type="Number",format="Color",inherit="yes")]
+		[Style(name="serie2Color",type="Number",format="Color",inherit="yes")]
+		[Style(name="serie2Color",type="Number",format="Color",inherit="yes")]		
 		[Style(name="serie1Color",type="Number",format="Color",inherit="yes")]
 		[Style(name="serie2Color",type="Number",format="Color",inherit="yes")]
 		[Style(name="serie3Color",type="Number",format="Color",inherit="yes")]
+		[Style(name="serie1Width",type="Number",inherit="yes")]
+		[Style(name="serie2Width",type="Number",inherit="yes")]
+		[Style(name="serie3Width",type="Number",inherit="yes")]		
 	</fx:Metadata>
 	
 	<fx:Declarations>
 		
-		<s:SolidColorStroke id="serie1LineStroke" weight="1" color="{getStyle('serie1Color')}" />		
-		<s:SolidColorStroke id="serie2LineStroke" weight="1" color="{getStyle('serie2Color')}" />
-		<s:SolidColorStroke id="serie3LineStroke" weight="1" color="{getStyle('serie3Color')}" />
+		<s:SolidColorStroke id="serie1LineStroke" weight="{getStyle('serie1Width')}" color="{getStyle('serie1Color')}" />		
+		<s:SolidColorStroke id="serie2LineStroke" weight="{getStyle('serie2Width')}" color="{getStyle('serie2Color')}" />
+		<s:SolidColorStroke id="serie3LineStroke" weight="{getStyle('serie3Width')}" color="{getStyle('serie3Color')}" />
+		<mx:CurrencyFormatter id="vertAxisCurrFormat" 
+							  currencySymbol="" 
+							  decimalSeparatorTo="." 
+							  error="0.00" 
+							  precision="2" 
+							  thousandsSeparatorTo="," 
+							  useThousandsSeparator="true" 
+							  useNegativeSign="false" />		
 		
 	</fx:Declarations>
 	
 	<fx:Script>
 		<![CDATA[
+			
 			import mx.charts.chartClasses.IAxis;
 			import mx.events.FlexEvent;
 			
@@ -137,18 +153,23 @@
 					switch(_chartType) {
 						
 						case Constants.GLD_PLT_RATIO:
+							
+							chartTitle += ("Gld/Plt Price Ratio");
+							break;
+						
 						case Constants.GLD_SLV_RATIO:
 							
-							chartTitle += (_chartType + " Price Ratio");
+							chartTitle += ("Gld/Slv Price Ratio");
 							break;
 						
 						default:
 							
-							chartTitle += (_chartType + " Price");					
+							chartTitle += (_chartType + " Price");	
+							axisTitle = "Price "
 							
 							if( _currency ) {						
 								chartTitle += " in " + _currency.toUpperCase();
-								axisTitle = _currency.toUpperCase();
+								axisTitle += " in " + _currency.toUpperCase();
 							}
 							if( _weightUnits ) {						
 								chartTitle += "/" + weightUnits.toUpperCase();
@@ -208,6 +229,16 @@
 				
 			}
 			
+			public function vLabelFunction( val:Number, prevVal:Number, axis:IAxis ) : String {
+				
+				if( vertAxisCurrFormat ) {
+					return vertAxisCurrFormat.format(val);
+				} else {
+					return "0.00";
+				}
+				
+			}			
+			
 			public override function styleChanged( styleProp:String ) : void {
 				
 				super.styleChanged( styleProp );
@@ -224,6 +255,26 @@
 					
 					case "serie3Color":
 						serie3LineStroke.color = Number(getStyle( styleProp ));
+						break;	
+					
+					case "serie1Width":
+						serie1LineStroke.weight = Number(getStyle( styleProp ));
+						break;
+					
+					case "serie2Width":
+						serie2LineStroke.weight = Number(getStyle( styleProp ));
+						break;
+					
+					case "serie3Width":
+						serie3LineStroke.weight = Number(getStyle( styleProp ));
+						break;
+					
+					case "axisColor":
+						horizontalAxisStroke.color = verticalAxisStroke.color = Number(getStyle( styleProp ));
+						break;
+					
+					case "gridColor":
+						horizontalGridStroke.color = verticalGridStroke.color = Number(getStyle( styleProp ));
 						break;					
 					
 				}
@@ -250,16 +301,21 @@
 				zoom(e["delta"] > 0 ? 1 + e["delta"]/24 : 1/(1 - e["delta"]/24) );
 			}
 			
+			private var prevZoom:Number;
+			
 			protected function zoomGestureHandler( e:TransformGestureEvent ) : void {
 				
-				zoom(e.scaleX);
+				if(e.phase == "begin") prevZoom = 1;		
+			
+				prevZoom = e.scaleX / prevZoom;
+				zoom( prevZoom );
 				
 			}
 			
 			protected function panGestureHandler( e:TransformGestureEvent ) : void {
 				
-				pan(e.offsetX);
-				
+				//pan(e.offsetX);
+				chartLabel.text = "Pan: " + e.offsetX;
 			}						
 			
 		]]>
@@ -281,43 +337,37 @@
 		
 		<!-- Vertical Axis -->
 		<mx:verticalAxis>
-			<mx:LinearAxis id="varticalAxis" baseAtZero="false" />
+			<mx:LinearAxis id="varticalAxis" baseAtZero="false" labelFunction="{vLabelFunction}"/>
 		</mx:verticalAxis>
 		<mx:verticalAxisRenderers>					
 			<mx:AxisRenderer id="verticalAxisRenderer" axis="{varticalAxis}" styleName="fontSmall">
 				<mx:axisStroke>
-					<mx:SolidColorStroke id="varticalAxisStroke" weight="1" color="yellow"/>
+					<mx:SolidColorStroke id="verticalAxisStroke" weight="1" color="{getStyle('color')}"/>
 				</mx:axisStroke>							
 			</mx:AxisRenderer>
 		</mx:verticalAxisRenderers>	
 		
 		<!-- Horizontal Axis -->
 		<mx:horizontalAxis>
-			<mx:LinearAxis id="horizontalAxis" title="Date" baseAtZero="true" maximum="{24*60}" labelFunction="{hLabelFunction}"/>
+			<mx:LinearAxis id="horizontalAxis" title="Date" baseAtZero="true" maximum="{24*60}" labelFunction="{hLabelFunction}" />
 		</mx:horizontalAxis>
 		<mx:horizontalAxisRenderers>					
 			<mx:AxisRenderer id="horizontalAxisRenderer" axis="{horizontalAxis}" styleName="fontSmall" >
 				<mx:axisStroke>
-					<mx:SolidColorStroke id="horizontalAxisStroke" weight="1" color="yellow"/>
+					<mx:SolidColorStroke id="horizontalAxisStroke" weight="1" color="{getStyle('color')}"/>
 				</mx:axisStroke>							
 			</mx:AxisRenderer>
 		</mx:horizontalAxisRenderers>
 		
 		<!-- Grid -->
 		<mx:backgroundElements>
-			<mx:GridLines id="gridlines" horizontalChangeCount="1" verticalChangeCount="1"  >
+			<mx:GridLines id="gridlines" horizontalChangeCount="1" verticalChangeCount="1"   >
 				<mx:horizontalStroke>
-					<mx:SolidColorStroke id="horLine" color="0x999999" />						
+					<mx:SolidColorStroke id="horizontalGridStroke" color="{getStyle('gridColor')}" weight="1" />						
 				</mx:horizontalStroke>
 				<mx:verticalStroke>
-					<mx:SolidColorStroke id="verLine" color="0x999999" />
+					<mx:SolidColorStroke id="verticalGridStroke" color="{getStyle('gridColor')}" weight="1"/>
 				</mx:verticalStroke>
-				<mx:horizontalFill>
-					<mx:SolidColor id="horFill" />
-				</mx:horizontalFill>
-				<mx:verticalFill>
-					<mx:SolidColor id="verFill" />
-				</mx:verticalFill>
 			</mx:GridLines>			
 		</mx:backgroundElements>
 		

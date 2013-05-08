@@ -1,0 +1,28 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+
+/* Custom skins */
+
+s|Button, s|RadioButton.button
+{
+	skinClass: ClassReference("com.goldpricecafe.mobile.skins.CustomButtonSkin");
+}
+
+s|RadioButton
+{
+	skinClass: ClassReference("com.goldpricecafe.mobile.skins.CustomRadioButtonSkin");
+}
+
+#currencyBtn {
+	skinClass: ClassReference("com.goldpricecafe.mobile.skins.DropdownButtonSkin");
+}
+
+s|DropDownList 
+{
+	skinClass: ClassReference("com.goldpricecafe.mobile.skins.DropDownListMobileSkin");		
+}
+
+s|ButtonBar 
+{
+	skinClass: ClassReference("com.goldpricecafe.mobile.skins.ButtonBarSkin");
+}

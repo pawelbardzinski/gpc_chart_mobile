@@ -22,6 +22,13 @@
 		<nature>com.adobe.flexbuilder.project.flexnature</nature>
 		<nature>com.adobe.flexbuilder.project.actionscriptnature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>[source path] mx</name>
+			<type>2</type>
+			<location>C:/Program Files/Adobe/Adobe Flash Builder 4.7 (64 Bit)/sdks/4.6.0/frameworks/projects/mx/src/mx</location>
+		</link>
+	</linkedResources>
 	<variableList>
 		<variable>
 			<name>TOMCAT_PATH</name>

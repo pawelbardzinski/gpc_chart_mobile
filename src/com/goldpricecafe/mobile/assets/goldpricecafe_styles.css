@@ -1,0 +1,147 @@
+/* CSS for goldpricecafe mobile application */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+@namespace mx "library://ns.adobe.com/flex/mx";
+
+/* Fonts */
+
+@font-face {
+	src: url("Michroma.ttf");
+	fontFamily: michromaCFF;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: true;
+}
+
+@font-face {
+	src: url("Michroma.ttf");
+	fontFamily: michroma;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: false;
+}
+
+@font-face {
+	src: url("MateSC-Regular.ttf");
+	fontFamily: mateCFF;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: true;
+}
+
+@font-face {
+	src: url("MateSC-Regular.ttf");
+	fontFamily: mate;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: false;
+}
+
+/* Common styles */
+global {
+	
+	/* Colors */
+	color: #EEDD00;
+	borderColor: #998800;
+	fontFamily: michroma;
+	fontWeight: normal;	
+	fontStyle: normal;	
+}
+
+s|VGroup, s|HGroup {
+	gap: 0;
+}
+
+s|BusyIndicator
+{
+	symbolColor: #EEDD00; 
+}
+
+s|Label
+{
+	fontFamily: michromaCFF;
+	fontWeight: normal;	
+	fontStyle: normal;
+}
+
+.button, s|Button, s|RadioButton, s|ButtonBarButton
+{
+	fontFamily: michroma;
+	fontWeight: normal;	
+	fontStyle: normal;
+	chromeColor: #000000;
+	paddingBottom: 7;
+	paddingTop: 7;	
+	glossiness: 15;
+}
+
+.bigButton 
+{
+	paddingBottom: 14;
+	paddingTop: 14;	
+}
+
+.radioBtn 
+{
+	paddingBottom: 4;
+	paddingTop: 4;
+	glossiness:20;
+}
+
+#indivChartBtn
+{
+	paddingLeft: 15;
+	paddingRight: 15;	
+}
+
+s|Application {
+	
+	backgroundColor: #000000;	
+}
+
+#chartPanel {
+	
+	serie1Color: #FFFF00;
+	serie2Color: #AAAA00;
+	serie3Color: #777700;	
+	serie1Width: 2;
+	serie2Width: 1;
+	serie3Width: 1;
+	gridColor: #999999;
+}
+
+s|TextInput {
+	color: #998800; 
+	contentBackgroundColor: #151515;
+	textAlign: right;
+}
+
+
+.selected 
+{
+	chromeColor: #000000;
+	borderColor: #FFFF00; 
+	color: #FFFF00;
+	flat: true;
+}
+
+/* Font sizes */
+
+.fontBig {
+	fontSize: 50;
+}
+
+.fontMedium {
+	fontSize: 18;
+}
+
+.fontSmall {
+	fontSize: 14;
+}
+
+.fontVerySmall {
+	fontSize: 10;
+}
+
+
+
