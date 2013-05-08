@@ -30,9 +30,24 @@
 			//                                     				//
 			//					Protected						//
 			//													//
-			//////////////////////////////////////////////////////			
+			//////////////////////////////////////////////////////	
+			
+			protected static const LINE_WIGHTS:Array = [1,2,3,4,5];
 			
 			protected function synchronize() : void {
+				
+				synchronizeFontColor();
+				synchronizeBorderColor();
+				synchronizeButtonColor();
+				synchronizeSelectedColor();
+				synchronizeBackgroundColor();
+				synchronizeSerie1Style();
+				synchronizeSerie2Style();
+				synchronizeSerie3Style();
+				
+			}
+			
+			protected function synchronizeFontColor() : void {
 				
 				var val:Number;
 				
@@ -41,47 +56,81 @@
 				fontColorTI.setStyle("contentBackgroundColor",val);
 				fontColorTI.setStyle("color",findForeColor(val));
 				
-				val = Number( CustomStyleManager.getStyle("global","borderColor") );
+			}
+			
+			protected function synchronizeBorderColor() : void {			
+				
+				var val:Number  = Number( CustomStyleManager.getStyle("global","borderColor") );
 				borderColorTI.text = "0x" + val.toString(16).toUpperCase();
 				borderColorTI.setStyle("contentBackgroundColor",val);
 				borderColorTI.setStyle("color",findForeColor(val));
 				
-				val = Number( CustomStyleManager.getStyle(".button","chromeColor") );
+			}
+			
+			protected function synchronizeButtonColor() : void {
+				
+				var val:Number  = Number( CustomStyleManager.getStyle(".button","chromeColor") );
 				buttonColorTI.text = "0x" + val.toString(16).toUpperCase();
 				buttonColorTI.setStyle("contentBackgroundColor",val);
 				buttonColorTI.setStyle("color",findForeColor(val));
 				
-				val = Number( CustomStyleManager.getStyle(".selected","chromeColor") )
+			}
+
+			protected function synchronizeSelectedColor() : void {
+				
+				var val:Number  = Number( CustomStyleManager.getStyle(".selected","chromeColor") );
 				highlightColorTI.text = "0x" + val.toString(16).toUpperCase();
 				highlightColorTI.setStyle("contentBackgroundColor",val);
 				highlightColorTI.setStyle("color",findForeColor(val));
 				
-				val = Number( CustomStyleManager.getStyle(".selected","borderColor") )
+				val = Number( CustomStyleManager.getStyle(".selected","borderColor") );
 				highlightBorderTI.text = "0x" + val.toString(16).toUpperCase();
 				highlightBorderTI.setStyle("contentBackgroundColor",val);
-				highlightBorderTI.setStyle("color",findForeColor(val));				
+				highlightBorderTI.setStyle("color",findForeColor(val));					
 				
-				val = Number( CustomStyleManager.getStyle("s|Application","backgroundColor") )
+			}
+						
+			protected function synchronizeBackgroundColor() : void {
+				
+				var val:Number  = Number( CustomStyleManager.getStyle("s|Application","backgroundColor") );
 				backgroundColorTI.text = "0x" + val.toString(16).toUpperCase();
 				backgroundColorTI.setStyle("contentBackgroundColor",val);
 				backgroundColorTI.setStyle("color",findForeColor(val));	
 				
-				val = Number( CustomStyleManager.getStyle("#chartPanel","serie1Color") )
+			}
+				
+			protected function synchronizeSerie1Style() : void {
+				
+				var val:Number  = Number( CustomStyleManager.getStyle("#chartPanel","serie1Color") );
 				serie1ColorTI.text = "0x" + val.toString(16).toUpperCase();
 				serie1ColorTI.setStyle("contentBackgroundColor",val);
 				serie1ColorTI.setStyle("color",findForeColor(val));	
 				
-				val = Number( CustomStyleManager.getStyle("#chartPanel","serie2Color") )
-				serie2ColorTI.text = "0x" + val.toString(16).toUpperCase();
-				serie2ColorTI.setStyle("contentBackgroundColor",val);
-				serie2ColorTI.setStyle("color",findForeColor(val));		
-				
-				val = Number( CustomStyleManager.getStyle("#chartPanel","serie3Color") )
-				serie3ColorTI.text = "0x" + val.toString(16).toUpperCase();
-				serie3ColorTI.setStyle("contentBackgroundColor",val);
-				serie3ColorTI.setStyle("color",findForeColor(val));					
+				serie1WidthSpinner.selectedValue = Number( CustomStyleManager.getStyle("#chartPanel","serie1Width") );
 				
 			}
+				
+			protected function synchronizeSerie2Style() : void {
+				
+				var val:Number  = Number( CustomStyleManager.getStyle("#chartPanel","serie2Color") );
+				serie2ColorTI.text = "0x" + val.toString(16).toUpperCase();
+				serie2ColorTI.setStyle("contentBackgroundColor",val);
+				serie2ColorTI.setStyle("color",findForeColor(val));	
+				
+				serie2WidthSpinner.selectedValue = Number( CustomStyleManager.getStyle("#chartPanel","serie2Width") );
+				
+			}
+				
+			protected function synchronizeSerie3Style() : void {
+				
+				var val:Number  = Number( CustomStyleManager.getStyle("#chartPanel","serie3Color") );
+				serie3ColorTI.text = "0x" + val.toString(16).toUpperCase();
+				serie3ColorTI.setStyle("contentBackgroundColor",val);
+				serie3ColorTI.setStyle("color",findForeColor(val));	
+				
+				serie3WidthSpinner.selectedValue = Number( CustomStyleManager.getStyle("#chartPanel","serie3Width") );
+				
+			}				
 			
 			protected function findForeColor( color:uint ) : uint {
 				
@@ -113,8 +162,9 @@
 			protected function fontColorHandler(event:Event):void
 			{				
 				CustomStyleManager.setStyle("global","color",fontColorTI.text);	
+				CustomStyleManager.setStyle("#chartPanel","axisColor", fontColorTI.text );
 				CustomStyleManager.setStyle("s|BusyIndicator","symbolColor",fontColorTI.text);	
-				synchronize();
+				synchronizeFontColor();
 			}
 			protected function fontFamilyHandler(event:Event):void
 			{				
@@ -125,65 +175,68 @@
 			protected function borderColorHandler(event:Event):void
 			{
 				CustomStyleManager.setStyle("global","borderColor",borderColorTI.text);
-				synchronize();
+				synchronizeBorderColor();
 			}
 			
 			protected function backgroundColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("s|Application","backgroundColor",buttonColorTI.text);
-				synchronize();
+				CustomStyleManager.setStyle("s|Application","backgroundColor",backgroundColorTI.text);
+				synchronizeBackgroundColor();
 			}
 			
 			protected function buttonColorHandler(event:Event):void
 			{
 				CustomStyleManager.setStyle(".button","chromeColor",buttonColorTI.text);
 				CustomStyleManager.setStyle("s|Button","chromeColor",buttonColorTI.text);
-				synchronize();
+				synchronizeButtonColor();
 			}
 			
 			protected function highlightColorHandler(event:Event):void
 			{
 				CustomStyleManager.setStyle(".selected","chromeColor",highlightColorTI.text);
-				synchronize();
+				synchronizeSelectedColor();
 			}
 			
 			protected function highlightBorderHandler(event:Event):void
 			{
 				CustomStyleManager.setStyle(".selected","borderColor",highlightBorderTI.text);
-				synchronize();
+				synchronizeSelectedColor();
 			}			
 			
 			protected function serie1ColorHandler(event:Event):void
 			{
 				CustomStyleManager.setStyle("#chartPanel","serie1Color",serie1ColorTI.text);
-				synchronize();
+				synchronizeSerie1Style();
 			}
 			
 			protected function serie1WeightHandler(event:Event):void
 			{
-				/*TODO: Implement */
+				CustomStyleManager.setStyle("#chartPanel","serie1Width",serie1WidthSpinner.selectedValue);
+				synchronizeSerie1Style();
 			}			
 			
 			protected function serie2ColorHandler(event:Event):void
 			{
 				CustomStyleManager.setStyle("#chartPanel","serie2Color",serie2ColorTI.text);
-				synchronize();
+				synchronizeSerie2Style();
 			}
 			
 			protected function serie2WeightHandler(event:Event):void
 			{
-				/*TODO: Implement */
+				CustomStyleManager.setStyle("#chartPanel","serie2Width",serie2WidthSpinner.selectedValue);
+				synchronizeSerie2Style();
 			}			
 			
 			protected function serie3ColorHandler(event:Event):void
 			{
 				CustomStyleManager.setStyle("#chartPanel","serie3Color",serie3ColorTI.text);
-				synchronize();
+				synchronizeSerie3Style();
 			}
 			
 			protected function serie3WeightHandler(event:Event):void
 			{
-				/*TODO: Implement */
+				CustomStyleManager.setStyle("#chartPanel","serie3Width",serie3WidthSpinner.selectedValue);
+				synchronizeSerie3Style();
 			}
 			
 		]]>
@@ -229,20 +282,20 @@
 		<s:TextInput id="highlightBorderTI" width="100%" height="100%" focusOut="highlightBorderHandler(event)" enter="highlightBorderHandler(event)"/>	
 		<s:HGroup width="100%" height="100%">
 			<s:TextInput id="serie1ColorTI" width="70%" height="100%" focusOut="serie1ColorHandler(event)" enter="serie1ColorHandler(event)"/>
-			<gpc:HSpinner id="serie1ColorWeightSpinner" width="40%" height="100%" change="serie1WeightHandler(event)">
-				<s:ArrayCollection source="[1,2,3,4]"/>
+			<gpc:HSpinner id="serie1WidthSpinner" width="40%" height="100%" change="serie1WeightHandler(event)">
+				<s:ArrayCollection source="{LINE_WIGHTS}"/>
 			</gpc:HSpinner>
 		</s:HGroup>		
 		<s:HGroup width="100%" height="100%">
 			<s:TextInput id="serie2ColorTI" width="70%" height="100%" focusOut="serie2ColorHandler(event)" enter="serie2ColorHandler(event)"/>
-			<gpc:HSpinner id="serie2ColorWeightSpinner" width="40%" height="100%" change="serie2WeightHandler(event)">
-				<s:ArrayCollection source="[1,2,3,4]"/>
+			<gpc:HSpinner id="serie2WidthSpinner" width="40%" height="100%" change="serie2WeightHandler(event)">
+				<s:ArrayCollection source="{LINE_WIGHTS}"/>
 			</gpc:HSpinner>
 		</s:HGroup>
 		<s:HGroup width="100%" height="100%">
 			<s:TextInput id="serie3ColorTI" width="70%" height="100%" focusOut="serie3ColorHandler(event)" enter="serie3ColorHandler(event)"/>
-			<gpc:HSpinner id="serie3ColorWeightSpinner" width="40%" height="100%" change="serie3WeightHandler(event)">
-				<s:ArrayCollection source="[1,2,3,4]"/>
+			<gpc:HSpinner id="serie3WidthSpinner" width="40%" height="100%" change="serie3WeightHandler(event)">
+				<s:ArrayCollection source="{LINE_WIGHTS}"/>
 			</gpc:HSpinner>
 		</s:HGroup>		
 	</s:VGroup>

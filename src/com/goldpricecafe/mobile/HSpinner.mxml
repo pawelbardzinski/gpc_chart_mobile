@@ -52,6 +52,18 @@
 				
 			}	
 			
+			public function set selectedValue( value:Object ) : void {
+				
+				if(!_dataProvider)  return;
+				
+				for( var i:uint = 0; i<_dataProvider.length; i++ ) {
+					if(_dataProvider[i] == value ) {
+						selectedIndex = i;
+						return;
+					}
+				}
+				
+			}	
 			public function get selectedValue( ) : Object {
 				
 				if(_dataProvider && _selectedIndex >= 0) {

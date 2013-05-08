@@ -2,88 +2,25 @@ package com.goldpricecafe.mobile.skins {
 
 	import flash.display.CapsStyle;
 	import flash.display.DisplayObject;
-
+	import flash.display.GradientType;
 	import flash.display.JointStyle;
 	import flash.display.LineScaleMode;
+	import flash.geom.Matrix;
 	
-	import mx.core.DPIClassification;
-	import mx.core.FlexGlobals;
-	import mx.core.mx_internal;
 	import mx.utils.ColorUtil;
 	
 	import spark.components.IconPlacement;
-	import spark.skins.mobile.supportClasses.ButtonSkinBase;
+
 	
-	use namespace mx_internal;
 
-	[HostComponent("spark.skins.mobile.supportClasses.ButtonSkinBase")]
-	public class CustomButtonSkin extends ButtonSkinBase
+
+	public class CustomRadioButtonSkin extends CustomButtonSkin
 	{
-		protected static const IS_FLAT_STYLE:String = "flat";
-		protected static const CHROME_COLOR_STYLE:String = "chromeColor";
-		protected static const GLOSSINESS_STYLE:String = "glossiness";
-		protected static const BORDER_COLOR_STYLE:String = "borderColor";
-		protected static const PADDING_LEFT_STYLE:String = "paddingLeft";
-		protected static const PADDING_RIGHT_STYLE:String = "paddingRight";
-		protected static const PADDING_TOP_STYLE:String = "paddingTop";
-		protected static const PADDING_BOTTOM_STYLE:String = "paddingBottom";		
 		
-		protected var borderColor:uint = 0;	
-		protected var layoutCornerEllipseSize:Number;		
-		protected var CHROME_COLOR_RATIOS:Array = [0, 127.5];
-		protected var CHROME_COLOR_ALPHAS:Array = [1, 1];
-
-		
-		public function CustomButtonSkin() {
+		public function CustomRadioButtonSkin() {
 			
 			super();
-			
-			switch (FlexGlobals.topLevelApplication.runtimeDPI)
-			{
-				/*case DPIClassification.DPI_320:
-				{
-	
-					layoutGap = 10;
-					layoutCornerEllipseSize = 10;
-					layoutPaddingLeft = 10;
-					layoutPaddingRight = 10;
-					layoutPaddingTop = 10;
-					layoutPaddingBottom = 10;
-					layoutBorderSize = 2;
-					measuredDefaultWidth = 32;
-					measuredDefaultHeight = 32;
-					
-					break;
-				}
-				case DPIClassification.DPI_240:
-				{	
-					layoutGap = 8;
-					layoutCornerEllipseSize = 8;
-					layoutPaddingLeft = 8;
-					layoutPaddingRight = 8;
-					layoutPaddingTop = 8;
-					layoutPaddingBottom = 8;
-					layoutBorderSize = 2;
-					measuredDefaultWidth = 24;
-					measuredDefaultHeight = 24;
-					
-					break;
-				}*/
-				default:  // DPIClassification.DPI_160:
-				{				
-					layoutGap = 5;
-					layoutCornerEllipseSize = 5;
-					layoutPaddingLeft = 5;
-					layoutPaddingRight = 5;
-					layoutPaddingTop = 5;
-					layoutPaddingBottom = 5;
-					layoutBorderSize = 1;
-					measuredDefaultWidth = 16;
-					measuredDefaultHeight = 16;
-					
-					break;
-				}
-			}			
+			useCenterAlignment = false;
 			
 		}
 		
@@ -190,7 +127,7 @@ package com.goldpricecafe.mobile.skins {
 			measuredMinWidth = h;
 			measuredMinHeight = h;
 			
-			measuredWidth = w
+			measuredWidth = w + layoutGap + h
 			measuredHeight = h;
 						
 		}
@@ -228,71 +165,50 @@ package com.goldpricecafe.mobile.skins {
 			
 		}
 		
-		override protected function drawBackground(unscaledWidth:Number, unscaledHeight:Number):void {
-						
-			super.drawBackground(unscaledWidth,unscaledHeight);
+		override protected function layoutContents(unscaledWidth:Number, unscaledHeight:Number):void {
 			
+			super.layoutContents(unscaledWidth, unscaledHeight);		
+			labelDisplay.x = unscaledHeight + layoutGap;
+			
+		}
+		
+		override protected function drawBackground(unscaledWidth:Number, unscaledHeight:Number):void {
+								
 			var chromeColor:uint = getStyle(CHROME_COLOR_STYLE);
 			var borderColor:uint = getStyle(BORDER_COLOR_STYLE);
 			var isFlat:Boolean = getStyle(IS_FLAT_STYLE);
 			var glossiness:uint = getStyle(GLOSSINESS_STYLE);
-			var r1:Number = layoutCornerEllipseSize;
-			var r2:Number = layoutCornerEllipseSize + layoutBorderSize;
-			var r3:Number = layoutCornerEllipseSize + 2 * layoutBorderSize;
+			var colorLight:uint = ColorUtil.adjustBrightness2(chromeColor,glossiness);
+			var h:Number = unscaledHeight/2;
+					
+			graphics.beginFill(colorLight);
+			graphics.drawEllipse(0,0,unscaledHeight, unscaledHeight);
+			graphics.endFill();	
 			
+			var colors:Array = [];
+			var colorMatrix:Matrix = new Matrix();
+			colorMatrix.createGradientBox(unscaledWidth, unscaledHeight, Math.PI / 2, 0, 0);
+			colors[0] = colorLight;
+			colors[1] = chromeColor;
 			
-			if ( isDown() || isFlat ) {
+			graphics.beginGradientFill(GradientType.LINEAR, colors, CHROME_COLOR_ALPHAS, CHROME_COLOR_RATIOS, colorMatrix);	
+			graphics.drawEllipse(layoutBorderSize,2*layoutBorderSize,unscaledHeight-2*layoutBorderSize, unscaledHeight-2*layoutBorderSize);
+			graphics.endFill();			
+			graphics.beginFill(colorLight);	
+			graphics.drawEllipse(unscaledHeight/2-h/2,unscaledHeight/2-h/2,h,h);
+			graphics.endFill();
 				
-				graphics.beginFill(chromeColor);
-				graphics.drawRoundRect(layoutBorderSize, layoutBorderSize, 
-					unscaledWidth - 2 * layoutBorderSize, 
-					unscaledHeight - 2 * layoutBorderSize, 
-					r2, r2);
-				graphics.endFill();	
+			if(isSelected()) {				
 				
-			} else {
-				
-				var colorLight:uint = ColorUtil.adjustBrightness2(chromeColor,glossiness);
-				
-				graphics.beginFill(colorLight);
-				graphics.drawRoundRect(2*layoutBorderSize, 2*layoutBorderSize, 
-					unscaledWidth - 4 * layoutBorderSize + 1, 
-					unscaledHeight - 4 * layoutBorderSize + 1, 
-					r2, r2);
-				graphics.endFill();	
-				
-				graphics.beginFill(chromeColor);
-				graphics.drawRoundRect(3*layoutBorderSize, unscaledHeight*0.4, 
-					unscaledWidth - 6 * layoutBorderSize + 1, 
-					unscaledHeight*0.6 - 3 * layoutBorderSize + 1, 
-					r1, r1);
-				graphics.endFill();					
+				graphics.beginFill(borderColor);	
+				graphics.drawEllipse(unscaledHeight/2-h/2+layoutBorderSize,unscaledHeight/2-h/2+layoutBorderSize,h-layoutBorderSize,h-layoutBorderSize);
+				graphics.endFill();
 				
 			}
-						
-			graphics.lineStyle( isSelected() ? 2 * layoutBorderSize : layoutBorderSize, borderColor, 1.0, true, LineScaleMode.NORMAL, CapsStyle.NONE, JointStyle.MITER );
-			drawBorder(borderColor,r3);
-			
-		}
+				
 		
-		
-		protected function drawBorder( borderColor:uint, radius:Number ) : void {
-
-			graphics.drawRoundRect(0,0,unscaledWidth,unscaledHeight,radius,radius);			
 			
-		}
-		
-		protected function isDown() : Boolean {
-
-			return (currentState.indexOf("Down") > -1) || (currentState.indexOf("down") > -1);
-			
-		}
-		
-		protected function isSelected() : Boolean {
-			
-			return (currentState.indexOf("Selected") > -1) || (currentState.indexOf("selected") > -1);
-			
-		}
+		}		
 		
 		
 	}
