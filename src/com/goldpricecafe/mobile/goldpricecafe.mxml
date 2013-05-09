@@ -704,6 +704,7 @@
 		
 		<s:HGroup id="settingsHGroup" width="100%" includeIn="settings" >
 			<gpc:SettingsPanel id="settingsPanel"/>
+			<s:Spacer width="5" />
 			<s:VGroup>
 				<s:Button id="cancelBtn" label="Reset" styleName="button fontMedium" width="100%" click="settingsPanel.reset()" />
 				<s:Button id="okBtn" label="OK" styleName="button fontMedium" width="100%" click="CustomStyleManager.saveStyles(); currentState = 'normal'" />

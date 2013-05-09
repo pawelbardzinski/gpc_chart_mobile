@@ -1,5 +1,6 @@
 /* CSS file */
 @namespace s "library://ns.adobe.com/flex/spark";
+@namespace gpc "com.goldpricecafe.mobile.*";
 
 /* Custom skins */
 
@@ -25,4 +26,9 @@ s|DropDownList
 s|ButtonBar 
 {
 	skinClass: ClassReference("com.goldpricecafe.mobile.skins.ButtonBarSkin");
+}
+
+s|TextInput, gpc|NumberInput
+{
+	skinClass: ClassReference("com.goldpricecafe.mobile.skins.TextInputSkin");
 }

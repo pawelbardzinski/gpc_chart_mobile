@@ -3,7 +3,7 @@
 		 xmlns:s="library://ns.adobe.com/flex/spark"
 		 xmlns:gpc="com.goldpricecafe.mobile.*"
 		 width="100%" height="100%"
-		 creationComplete="creationCompleteHandler(event)">
+		 creationComplete="creationCompleteHandler(event)" xmlns:mx="library://ns.adobe.com/flex/mx">
 	
 	<s:layout>
 		<s:HorizontalLayout/>
@@ -52,59 +52,45 @@
 				var val:Number;
 				
 				val = Number( CustomStyleManager.getStyle("global","color") );
-				fontColorTI.text = "0x" + val.toString(16).toUpperCase();
-				fontColorTI.setStyle("contentBackgroundColor",val);
-				fontColorTI.setStyle("color",findForeColor(val));
+				fontColorCC.selectedColor = val;
 				
 			}
 			
 			protected function synchronizeBorderColor() : void {			
 				
 				var val:Number  = Number( CustomStyleManager.getStyle("global","borderColor") );
-				borderColorTI.text = "0x" + val.toString(16).toUpperCase();
-				borderColorTI.setStyle("contentBackgroundColor",val);
-				borderColorTI.setStyle("color",findForeColor(val));
+				borderColorCC.selectedColor = val;
 				
 			}
 			
 			protected function synchronizeButtonColor() : void {
 				
 				var val:Number  = Number( CustomStyleManager.getStyle(".button","chromeColor") );
-				buttonColorTI.text = "0x" + val.toString(16).toUpperCase();
-				buttonColorTI.setStyle("contentBackgroundColor",val);
-				buttonColorTI.setStyle("color",findForeColor(val));
+				buttonColorCC.selectedColor = val;
 				
 			}
 
 			protected function synchronizeSelectedColor() : void {
 				
 				var val:Number  = Number( CustomStyleManager.getStyle(".selected","chromeColor") );
-				highlightColorTI.text = "0x" + val.toString(16).toUpperCase();
-				highlightColorTI.setStyle("contentBackgroundColor",val);
-				highlightColorTI.setStyle("color",findForeColor(val));
+				highlightColorCC.selectedColor = val;
 				
 				val = Number( CustomStyleManager.getStyle(".selected","borderColor") );
-				highlightBorderTI.text = "0x" + val.toString(16).toUpperCase();
-				highlightBorderTI.setStyle("contentBackgroundColor",val);
-				highlightBorderTI.setStyle("color",findForeColor(val));					
+				highlightBorderCC.selectedColor = val;				
 				
 			}
 						
 			protected function synchronizeBackgroundColor() : void {
 				
 				var val:Number  = Number( CustomStyleManager.getStyle("s|Application","backgroundColor") );
-				backgroundColorTI.text = "0x" + val.toString(16).toUpperCase();
-				backgroundColorTI.setStyle("contentBackgroundColor",val);
-				backgroundColorTI.setStyle("color",findForeColor(val));	
+				backgroundColorCC.selectedColor = val;	
 				
 			}
 				
 			protected function synchronizeSerie1Style() : void {
 				
 				var val:Number  = Number( CustomStyleManager.getStyle("#chartPanel","serie1Color") );
-				serie1ColorTI.text = "0x" + val.toString(16).toUpperCase();
-				serie1ColorTI.setStyle("contentBackgroundColor",val);
-				serie1ColorTI.setStyle("color",findForeColor(val));	
+				serie1ColorCC.selectedColor = val;
 				
 				serie1WidthSpinner.selectedValue = Number( CustomStyleManager.getStyle("#chartPanel","serie1Width") );
 				
@@ -113,9 +99,7 @@
 			protected function synchronizeSerie2Style() : void {
 				
 				var val:Number  = Number( CustomStyleManager.getStyle("#chartPanel","serie2Color") );
-				serie2ColorTI.text = "0x" + val.toString(16).toUpperCase();
-				serie2ColorTI.setStyle("contentBackgroundColor",val);
-				serie2ColorTI.setStyle("color",findForeColor(val));	
+				serie2ColorCC.selectedColor = val;
 				
 				serie2WidthSpinner.selectedValue = Number( CustomStyleManager.getStyle("#chartPanel","serie2Width") );
 				
@@ -124,9 +108,7 @@
 			protected function synchronizeSerie3Style() : void {
 				
 				var val:Number  = Number( CustomStyleManager.getStyle("#chartPanel","serie3Color") );
-				serie3ColorTI.text = "0x" + val.toString(16).toUpperCase();
-				serie3ColorTI.setStyle("contentBackgroundColor",val);
-				serie3ColorTI.setStyle("color",findForeColor(val));	
+				serie3ColorCC.selectedColor = val;
 				
 				serie3WidthSpinner.selectedValue = Number( CustomStyleManager.getStyle("#chartPanel","serie3Width") );
 				
@@ -165,9 +147,9 @@
 			
 			protected function fontColorHandler(event:Event):void
 			{				
-				CustomStyleManager.setStyle("global","color",fontColorTI.text);	
-				CustomStyleManager.setStyle("#chartPanel","axisColor", fontColorTI.text );
-				CustomStyleManager.setStyle("s|BusyIndicator","symbolColor",fontColorTI.text);	
+				CustomStyleManager.setStyle("global","color",fontColorCC.selectedColor);	
+				CustomStyleManager.setStyle("#chartPanel","axisColor",fontColorCC.selectedColor );
+				CustomStyleManager.setStyle("s|BusyIndicator","symbolColor",fontColorCC.selectedColor );	
 				synchronizeFontColor();
 			}
 			protected function fontFamilyHandler(event:Event):void
@@ -178,38 +160,38 @@
 			
 			protected function borderColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("global","borderColor",borderColorTI.text);
+				CustomStyleManager.setStyle("global","borderColor",borderColorCC.selectedColor);
 				synchronizeBorderColor();
 			}
 			
 			protected function backgroundColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("s|Application","backgroundColor",backgroundColorTI.text);
+				CustomStyleManager.setStyle("s|Application","backgroundColor",backgroundColorCC.selectedColor);
 				synchronizeBackgroundColor();
 			}
 			
 			protected function buttonColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle(".button","chromeColor",buttonColorTI.text);
-				CustomStyleManager.setStyle("s|Button","chromeColor",buttonColorTI.text);
+				CustomStyleManager.setStyle(".button","chromeColor",buttonColorCC.selectedColor);
+				CustomStyleManager.setStyle("s|Button","chromeColor",buttonColorCC.selectedColor);
 				synchronizeButtonColor();
 			}
 			
 			protected function highlightColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle(".selected","chromeColor",highlightColorTI.text);
+				CustomStyleManager.setStyle(".selected","chromeColor",highlightColorCC.selectedColor);
 				synchronizeSelectedColor();
 			}
 			
 			protected function highlightBorderHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle(".selected","borderColor",highlightBorderTI.text);
+				CustomStyleManager.setStyle(".selected","borderColor",highlightBorderCC.selectedColor);
 				synchronizeSelectedColor();
 			}			
 			
 			protected function serie1ColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("#chartPanel","serie1Color",serie1ColorTI.text);
+				CustomStyleManager.setStyle("#chartPanel","serie1Color",serie1ColorCC.selectedColor);
 				synchronizeSerie1Style();
 			}
 			
@@ -221,7 +203,7 @@
 			
 			protected function serie2ColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("#chartPanel","serie2Color",serie2ColorTI.text);
+				CustomStyleManager.setStyle("#chartPanel","serie2Color",serie2ColorCC.selectedColor);
 				synchronizeSerie2Style();
 			}
 			
@@ -233,7 +215,7 @@
 			
 			protected function serie3ColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("#chartPanel","serie3Color",serie3ColorTI.text);
+				CustomStyleManager.setStyle("#chartPanel","serie3Color",serie3ColorCC.selectedColor);
 				synchronizeSerie3Style();
 			}
 			
@@ -271,33 +253,33 @@
 		<s:Label text="Serie 3" styleName="fontMedium"/>
 		<s:Spacer height="100%"/>		
 	</s:VGroup>
-	<s:Spacer width="20" />
-	<s:VGroup id="settingsValuesGroup" height="100%" width="100%">
+	<s:Spacer width="10" />
+	<s:VGroup id="settingsValuesGroup" height="100%" width="100%" styleName="fontSmall">
 		<s:HGroup width="100%" height="100%">
-			<s:TextInput id="fontColorTI" width="70%" height="100%" focusOut="fontColorHandler(event)" enter="fontColorHandler(event)"/>
+			<mx:ColorPicker id="fontColorCC" width="70%" height="100%" change="fontColorHandler(event)"/>
 			<gpc:HSpinner id="fontFamilySpinner" width="40%" height="100%" change="fontFamilyHandler(event)">
 				<s:ArrayCollection source="[Michroma]"/>
 			</gpc:HSpinner>
-		</s:HGroup>
-		<s:TextInput id="borderColorTI" width="100%" height="100%" focusOut="borderColorHandler(event)" enter="borderColorHandler(event)"/>	
-		<s:TextInput id="backgroundColorTI" width="100%" height="100%" focusOut="backgroundColorHandler(event)" enter="backgroundColorHandler(event)"/>
-		<s:TextInput id="buttonColorTI" width="100%" height="100%" focusOut="buttonColorHandler(event)" enter="buttonColorHandler(event)"/>	
-		<s:TextInput id="highlightColorTI" width="100%" height="100%" focusOut="highlightColorHandler(event)" enter="highlightColorHandler(event)"/>
-		<s:TextInput id="highlightBorderTI" width="100%" height="100%" focusOut="highlightBorderHandler(event)" enter="highlightBorderHandler(event)"/>	
+		</s:HGroup>	
+		<mx:ColorPicker id="borderColorCC" width="100%" height="100%" change="borderColorHandler(event)"/>
+		<mx:ColorPicker id="backgroundColorCC" width="100%" height="100%" change="backgroundColorHandler(event)"/>
+		<mx:ColorPicker id="buttonColorCC" width="100%" height="100%" change="buttonColorHandler(event)"/>	
+		<mx:ColorPicker id="highlightColorCC" width="100%" height="100%" change="highlightColorHandler(event)"/>
+		<mx:ColorPicker id="highlightBorderCC" width="100%" height="100%" change="highlightBorderHandler(event)"/>	
 		<s:HGroup width="100%" height="100%">
-			<s:TextInput id="serie1ColorTI" width="70%" height="100%" focusOut="serie1ColorHandler(event)" enter="serie1ColorHandler(event)"/>
+			<mx:ColorPicker id="serie1ColorCC" width="70%" height="100%" change="serie1ColorHandler(event)"/>
 			<gpc:HSpinner id="serie1WidthSpinner" width="40%" height="100%" change="serie1WeightHandler(event)">
 				<s:ArrayCollection source="{LINE_WIGHTS}"/>
 			</gpc:HSpinner>
 		</s:HGroup>		
 		<s:HGroup width="100%" height="100%">
-			<s:TextInput id="serie2ColorTI" width="70%" height="100%" focusOut="serie2ColorHandler(event)" enter="serie2ColorHandler(event)"/>
+			<mx:ColorPicker id="serie2ColorCC" width="70%" height="100%" change="serie2ColorHandler(event)"/>
 			<gpc:HSpinner id="serie2WidthSpinner" width="40%" height="100%" change="serie2WeightHandler(event)">
 				<s:ArrayCollection source="{LINE_WIGHTS}"/>
 			</gpc:HSpinner>
 		</s:HGroup>
 		<s:HGroup width="100%" height="100%">
-			<s:TextInput id="serie3ColorTI" width="70%" height="100%" focusOut="serie3ColorHandler(event)" enter="serie3ColorHandler(event)"/>
+			<mx:ColorPicker id="serie3ColorCC" width="70%" height="100%" change="serie3ColorHandler(event)"/>
 			<gpc:HSpinner id="serie3WidthSpinner" width="40%" height="100%" change="serie3WeightHandler(event)">
 				<s:ArrayCollection source="{LINE_WIGHTS}"/>
 			</gpc:HSpinner>
