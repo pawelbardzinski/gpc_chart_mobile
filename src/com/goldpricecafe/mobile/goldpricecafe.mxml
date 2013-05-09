@@ -30,6 +30,8 @@
 		
 		<s:RadioButtonGroup id="unitsRedioGroup" change="weightUnits = unitsRedioGroup.selectedValue.toString()" />
 		<s:RadioButtonGroup id="chartTypeRadioGroup" change="chartType = chartTypeRadioGroup.selectedValue.toString()" />
+		<s:RadioButtonGroup id="rangeRadioGroup" change="dataRange = Number(rangeRadioGroup.selectedValue)" />
+		
 		<s:NumberFormatter  id="buttonsCurrFormat"						  
 							  decimalSeparator="." 
 							  errorText="0.00" 
@@ -56,8 +58,8 @@
 	<fx:Script>
 
 		<![CDATA[	
-			
 			import com.goldpricecafe.mobile.Constants;
+			import com.goldpricecafe.mobile.skins.ButtonBarFirstButton;
 			
 			import mx.collections.ArrayList;
 			import mx.events.FlexEvent;
@@ -124,7 +126,7 @@
 			public function set dataRange( range:uint ) : void {
 				
 				_dataRange = range;
-				dataRangeBar.selectedIndex = range;
+				rangeRadioGroup.selectedValue = range;
 				chartPanel.dataRange = range;				
 				
 			}
@@ -331,7 +333,7 @@
 				var min:int = sec/60;
 				sec = sec % 60;
 				
-				if( sec <= 0 ) {
+				if( min == 0 && sec <= 0 ) {
 					
 					timeLabel.text = "waiting";
 					fader.end();
@@ -340,6 +342,7 @@
 				} else {
 					
 					fader.end();
+					timeLabel.alpha = 1.0;
 					timeLabel.text = ((min < 10) ? "0" + min.toString() : min.toString()) + ":" +
 									 ((sec < 10) ? "0" + sec.toString() : sec.toString());
 				}
@@ -520,7 +523,7 @@
 					
 					var label:Label = new Label();
 					label.text = Constants.CURRENCIES[i];
-					label.styleName = "fontMedium";
+					label.styleName = "myLabel fontMedium";
 					label.addEventListener(MouseEvent.CLICK,function(e:Event) : void {
 						currencyPopUp.displayPopUp = false;
 						currency = e.target.text.toUpperCase();
@@ -532,7 +535,7 @@
 				chartType = Constants.GOLD;
 				currency = "USD";
 				weightUnits = Constants.UNITS_OZ;
-				dataRange = Constants.RANGE_3DAYS;		
+				dataRange = Constants.RANGE_3DAYS;
 				
 				/* Initialize gestures support */
 				Multitouch.inputMode = MultitouchInputMode.GESTURE;
@@ -549,6 +552,8 @@
 				_timer.addEventListener( TimerEvent.TIMER,timerHandler );
 				_timer.start();
 				
+				updateHeader();
+				
 			}
 			
 			protected function resizeHandler() : void {
@@ -557,8 +562,9 @@
 			
 			protected function newDataHandler( e:Event ) : void {
 				
-				updateChartData();			
 				_nextUpdate = _dataProvider.getNextUpdateTime();
+				updateChartData();			
+				updateHeader();
 				
 				busy = false;
 				
@@ -569,7 +575,13 @@
 				updateHeader();
 				
 			}
-						
+				
+			
+			public override function styleChanged(style:String) : void {
+				
+				super.styleChanged(style); invalidateProperties();
+				
+			}
 			
 			
 		]]>
@@ -590,9 +602,9 @@
 		<s:VGroup id="northPanel" width="100%" excludeFrom="settings" gap="0">
 		
 			<s:HGroup width="100%">
-				<s:Label id="headerLabel" text="Next Live Price Update " styleName="fontBig" />
+				<s:Label id="headerLabel" text="Next Live Price Update " styleName="myLabel fontBig" />
 				<s:Spacer width="100%"/>
-				<s:Label id="timeLabel" styleName="fontBig" />
+				<s:Label id="timeLabel" styleName="myLabel fontBig" />
 			</s:HGroup>
 			
 			
@@ -602,12 +614,12 @@
 					
 					<s:HGroup width="100%">
 						<!-- Curency button -->
-						<s:Button id="currencyBtn" minHeight="0" label="USD" width="40%" styleName="button bigButton fontMedium" click="popupFill.color = currencyBtn.getStyle('chromeColor'), currencyPopUp.displayPopUp = true" />	
+						<s:Button id="currencyBtn" label="USD" width="40%" styleName="button bigButton fontMedium" click="popupFill.color = currencyBtn.getStyle('chromeColor'), currencyPopUp.displayPopUp = true" />	
 						<!-- Metal buttons-->
-						<s:RadioButton id="goldBtn" minHeight="0" group="{chartTypeRadioGroup}" value="{Constants.GOLD}" width="100%" styleName="button bigButton fontMedium" label="Gld:" />
-						<s:RadioButton id="silverBtn" minHeight="0" group="{chartTypeRadioGroup}" value="{Constants.SILVER}" width="100%" styleName="button bigButton fontMedium" label="Slv:" />
-						<s:RadioButton id="platinumBtn" minHeight="0" group="{chartTypeRadioGroup}" value="{Constants.PLATINUM}" width="100%" styleName="button bigButton fontMedium" label="Plt:" />
-						<s:RadioButton id="palladiumBtn" minHeight="0" group="{chartTypeRadioGroup}" value="{Constants.PALLADIUM}" width="100%" styleName="button bigButton fontMedium" label="Pld:" />
+						<s:RadioButton id="goldBtn" group="{chartTypeRadioGroup}" value="{Constants.GOLD}" width="100%" styleName="button bigButton fontMedium" label="Gld:" />
+						<s:RadioButton id="silverBtn" group="{chartTypeRadioGroup}" value="{Constants.SILVER}" width="100%" styleName="button bigButton fontMedium" label="Slv:" />
+						<s:RadioButton id="platinumBtn" group="{chartTypeRadioGroup}" value="{Constants.PLATINUM}" width="100%" styleName="button bigButton fontMedium" label="Plt:" />
+						<s:RadioButton id="palladiumBtn" group="{chartTypeRadioGroup}" value="{Constants.PALLADIUM}" width="100%" styleName="button bigButton fontMedium" label="Pld:" />
 					</s:HGroup>
 					
 					<!-- Currency popup -->
@@ -643,20 +655,26 @@
 		
 		<s:VGroup id="southPanel" width="100%" excludeFrom="settings, fullscreen" gap="0">
 			
-			<s:HGroup id="chartDataBtnGroup" width="100%" verticalAlign="middle" >
+			<s:HGroup id="chartDataBtnGroup" width="100%" verticalAlign="middle" gap="0">
 				
 				<!-- Chart data range buttons -->
-				<s:ButtonBar id="dataRangeBar" requireSelection="true" change="dataRange = dataRangeBar.selectedIndex" styleName="button fontSmall" width="200%">
+				<!--s:ButtonBar id="dataRangeBar" requireSelection="true" change="dataRange = dataRangeBar.selectedIndex" styleName="button fontSmall">
 					<s:ArrayCollection source="['Last 3 Days','Today','History']"/>
-				</s:ButtonBar>
+				</s:ButtonBar-->
+				<s:RadioButton label="Last 3 Days" group="{rangeRadioGroup}" value="{Constants.RANGE_3DAYS}" skinClass="com.goldpricecafe.mobile.skins.ButtonBarFirstButton" styleName="button fontSmall"/>
+				<s:RadioButton label="Today" group="{rangeRadioGroup}" value="{Constants.RANGE_1DAY}" skinClass="com.goldpricecafe.mobile.skins.ButtonBarMiddleButton" styleName="button fontSmall"/>
+				<s:RadioButton label="History" group="{rangeRadioGroup}" value="{Constants.RANGE_HISTORY}" skinClass="com.goldpricecafe.mobile.skins.ButtonBarLastButton" styleName="button fontSmall"/>
 				
-				<!--s:Spacer width="10"/-->
+				<s:Spacer width="7"/>
 				
 				<!-- Prices ratio buttons -->
 				<s:RadioButton id="gldslvratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_SLV_RATIO}" label="Gld/Slv Ratio" width="100%" styleName="button fontSmall" />				
+				
+				<s:Spacer width="7"/>
+				
 				<s:RadioButton id="gldpltratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_PLT_RATIO}" label="Gld/Plt Ratio" width="100%" styleName="button fontSmall" />
 				
-				<!--s:Spacer width="10"/-->
+				<s:Spacer width="7"/>
 				
 				<s:Button id="settingsBtn" label="Settings" width="100%" styleName="button fontSmall" click="currentState = 'settings'" />
 				
@@ -666,34 +684,34 @@
 		
 			<s:Spacer height="10"/>
 			
-			<s:Label id="trackYourStackLabel" text="Track Your Stack" styleName="fontSmall" />
+			<s:Label id="trackYourStackLabel" text="Track Your Stack" styleName="myLabel fontSmall" />
 			
 			<s:HGroup id="trackYourStackGroup" width="100%" verticalAlign="justify" >
 				
 				<s:VGroup width="20%" height="100%" gap="2">
-					<s:Label id="pmcGoldLabel" styleName="fontVerySmall" />
+					<s:Label id="pmcGoldLabel" styleName="myLabel fontVerySmall" />
 					<gpc:NumberInput id="goldOzCalc" maxChars="6" styleName="fontSmall" width="100%" numberFormater="{amountFormat}" numericValue="@{myStackGold}"/>
-					<s:Label id="accGold" styleName="fontVerySmall" />				
+					<s:Label id="accGold" styleName="myLabel fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
-					<s:Label id="pmcSilverLabel" text="{'Silver ' + firstUp(weightUnits) + ':'}" styleName="fontVerySmall" />
+					<s:Label id="pmcSilverLabel" text="{'Silver ' + firstUp(weightUnits) + ':'}" styleName="myLabel fontVerySmall" />
 					<gpc:NumberInput id="silverOzCalc" maxChars="6" styleName="fontSmall" width="100%" numberFormater="{amountFormat}" numericValue="@{myStackSilver}"/>
-					<s:Label id="accSilver" text="0.00 USD" styleName="fontVerySmall" />				
+					<s:Label id="accSilver" text="0.00 USD" styleName="myLabel fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
-					<s:Label id="pmcPlatinumLabel" text="{'Platinum ' + firstUp(weightUnits) + ':'}" styleName="fontVerySmall" />
+					<s:Label id="pmcPlatinumLabel" text="{'Platinum ' + firstUp(weightUnits) + ':'}" styleName="myLabel fontVerySmall" />
 					<gpc:NumberInput id="platinumOzCalc" maxChars="6" styleName="fontSmall" width="100%" numberFormater="{amountFormat}" numericValue="@{myStackPlatinum}"/>
-					<s:Label id="accPlatinum" text="0.00 USD" styleName="fontVerySmall" />				
+					<s:Label id="accPlatinum" text="0.00 USD" styleName="myLabel fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
-					<s:Label id="pmcPalladiumLabel" text="{'Palladium ' + firstUp(weightUnits) + ':'}" styleName="fontVerySmall" />
+					<s:Label id="pmcPalladiumLabel" text="{'Palladium ' + firstUp(weightUnits) + ':'}" styleName="myLabel fontVerySmall" />
 					<gpc:NumberInput id="palladiumOzCalc" maxChars="6" styleName="fontSmall" width="100%" numberFormater="{amountFormat}" numericValue="@{myStackPalladium}"/>
-					<s:Label id="accPalladium" text="0.00 USD" styleName="fontVerySmall" />				
+					<s:Label id="accPalladium" text="0.00 USD" styleName="myLabel fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
 					<s:Spacer height="100%"/>
 					<s:RadioButton id="indivChartBtn" group="{chartTypeRadioGroup}" value="{Constants.MY_STACK}" label="Chart My Stack!" styleName="button bigButton fontMedium"/>
-					<s:Label id="totalWorth" text="Total: 0.00 USD" styleName="fontVerySmall" />				
+					<s:Label id="totalWorth" text="Total: 0.00 USD" styleName="myLabel fontVerySmall" />				
 				</s:VGroup>		
 				
 			</s:HGroup>

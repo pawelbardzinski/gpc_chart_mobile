@@ -27,7 +27,7 @@ package com.goldpricecafe.mobile
 		public function DataProvider()
 		{
 			_timer.addEventListener(TimerEvent.TIMER, timerHandler );		
-			load();
+			loadZipFile();
 		}
 		
 		public function getData(currency:String) : Object
@@ -78,7 +78,7 @@ package com.goldpricecafe.mobile
 			return _nextUpdate;
 		}
 		
-		protected function load() : Boolean {
+		protected function loadZipFile() : Boolean {
 			
 			if(_loading) return true;
 			
@@ -112,7 +112,7 @@ package com.goldpricecafe.mobile
 		
 		protected function timerHandler( e:Event ) : void {
 			
-			load();
+			loadZipFile();
 			
 		}
 		

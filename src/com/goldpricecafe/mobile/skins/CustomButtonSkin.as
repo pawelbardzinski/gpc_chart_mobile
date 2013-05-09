@@ -211,13 +211,7 @@ package com.goldpricecafe.mobile.skins {
 				hostComponent.styleName = styleName;
 			}
 			
-			if(isDown()) {
-				labelDisplay.setStyle("color",ColorUtil.adjustBrightness2(getStyle("color"),-getStyle(GLOSSINESS_STYLE))); 
-			} else {
-				labelDisplay.setStyle("color",getStyle("color")); 
-			}
 			labelDisplay.commitStyles();
-			
 			invalidateDisplayList();
 			
 		}		
@@ -226,11 +220,11 @@ package com.goldpricecafe.mobile.skins {
 			
 			super.createChildren();
 			
-		}
+		}		 
 		
 		override protected function drawBackground(unscaledWidth:Number, unscaledHeight:Number):void {
 						
-			super.drawBackground(unscaledWidth,unscaledHeight);
+			super.drawBackground(unscaledWidth,unscaledHeight);						
 			
 			var chromeColor:uint = getStyle(CHROME_COLOR_STYLE);
 			var borderColor:uint = getStyle(BORDER_COLOR_STYLE);
@@ -240,6 +234,11 @@ package com.goldpricecafe.mobile.skins {
 			var r2:Number = layoutCornerEllipseSize + layoutBorderSize;
 			var r3:Number = layoutCornerEllipseSize + 2 * layoutBorderSize;
 			
+			/*if(isDown()) {
+				labelDisplay.setStyle("color",ColorUtil.adjustBrightness2(getStyle("color"),-getStyle(GLOSSINESS_STYLE))); 
+			} else {
+				labelDisplay.setStyle("color",getStyle("color")); 
+			}*/			
 			
 			if ( isDown() || isFlat ) {
 				

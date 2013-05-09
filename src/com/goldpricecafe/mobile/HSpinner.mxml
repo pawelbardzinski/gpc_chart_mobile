@@ -101,8 +101,8 @@
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
 	
-	<s:Button id="lessBtn" width="20%" height="100%" minWidth="20" click="lessBtnClickHandler(event)"/>
+	<s:Button id="lessBtn" width="20%" height="100%" minWidth="20" styleName="button" click="lessBtnClickHandler(event)"/>
 	<s:TextInput id="valueLbl" width="60%" height="100%" editable="false" />
-	<s:Button id="moreBtn" width="20%" height="100%" minWidth="20" click="moreBtnClickHandler(event)"/>
+	<s:Button id="moreBtn" width="20%" height="100%" minWidth="20" styleName="button" click="moreBtnClickHandler(event)"/>
 			 
 </s:HGroup>

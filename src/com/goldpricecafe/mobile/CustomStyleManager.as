@@ -19,7 +19,82 @@ package com.goldpricecafe.mobile
 		protected static const _styleManager:IStyleManager2 = FlexGlobals.topLevelApplication.styleManager;		
 		protected static const _eventDispacher:IEventDispatcher = new EventDispatcher();
 		protected static const _selectors:Array = ["global",".selected",".button","s|Application","s|TextInput","s|BusyIndicator"];
-		protected static const _styles:Array = ["color","borderColor","chromeColor","fontFamiliy","backgroundColor","symbolColor"];						
+		protected static const _styles:Array = ["color","borderColor","chromeColor","fontFamiliy","backgroundColor","symbolColor"];	
+		
+		//////////////////////////////////////////////
+
+		public static function setFontFamily(val:String) : void {
+			
+			var fontFamily:String = val.toLowerCase();
+
+			setStyle("global","fontFamily", fontFamily);
+			setStyle(".button","fontFamily", fontFamily);
+			setStyle(".radioBtn","fontFamily", fontFamily);
+			setStyle(".myLabel","fontFamily", fontFamily+"CFF");
+			//setStyle("s|TextInput","fontFamily", fontFamily+"CFF"); 
+			
+			//FlexGlobals.topLevelApplication["headerLabel"].setStyle("fontFamily", fontFamily+"CFF");
+	
+		}
+		
+		public static function getFontFamily() : String {
+			
+			return String( getStyle("global","fontFamily") );
+			
+		}
+		
+		public static function setFontColor(color:uint) : void {
+				
+			setStyle("global","color", color);
+			setStyle(".selected","color", color);
+			setStyle("s|TextInput","color", color);
+		}
+		
+		public static function getFontColor() : Number {
+			
+			return Number( getStyle("global","color") );
+			
+		}
+		
+		public static function setBorderColor(color:uint) : void {
+			
+			setStyle("global","borderColor", color);
+			
+		}
+		
+		public static function getBorderColor() : Number {
+			
+			return Number( getStyle("global","borderColor") );
+			
+		}
+		
+		public static function setButtonColor(color:uint) : void {
+			
+			setStyle(".button","chromeColor", color);
+			setStyle("s|ButtonBar *","chromeColor", color);
+			//setStyle("s|ButtonBar","chromeColor", color);
+			
+		}
+		
+		public static function getButtonColor() : Number {
+			
+			return Number( getStyle(".button","chromeColor") );
+			
+		}
+		
+		public static function setBackgroundColor(color:uint) : void {
+			
+			setStyle("s|Application","backgroundColor", color);
+			
+		}
+		
+		public static function getBackgroundColor() : Number {
+			
+			return Number( getStyle("s|Application","backgroundColor") );
+			
+		}
+		
+		//////////////////////////////////////////////////
 		
 		public static function setStyle( selector:String, style:String, value:Object ) : void {
 			
@@ -138,6 +213,9 @@ package com.goldpricecafe.mobile
 			persistenceManager.setProperty("styles",styles);
 			
 		}
+		
+		
+		/* IEventHandler interface implementation */
 		
 		public static function addEventListener(type:String, listener:Function, useCapture:Boolean=false, priority:int=0, useWeakReference:Boolean=false):void
 		{

@@ -148,13 +148,7 @@ package com.goldpricecafe.mobile.skins {
 				hostComponent.styleName = styleName;
 			}
 			
-			if(isDown()) {
-				labelDisplay.setStyle("color",ColorUtil.adjustBrightness2(getStyle("color"),-getStyle(GLOSSINESS_STYLE))); 
-			} else {
-				labelDisplay.setStyle("color",getStyle("color")); 
-			}
-			labelDisplay.commitStyles();
-			
+			labelDisplay.commitStyles();		
 			invalidateDisplayList();
 			
 		}		

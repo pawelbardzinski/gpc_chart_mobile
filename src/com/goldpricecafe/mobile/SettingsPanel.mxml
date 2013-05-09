@@ -17,7 +17,9 @@
 			//                                     				//
 			//					Public							//
 			//													//
-			//////////////////////////////////////////////////////				
+			//////////////////////////////////////////////////////	
+			
+			public static const FONTS:Array = ["michroma","mate","codystar","londrina"]
 			
 			public function reset() : void {
 				
@@ -49,24 +51,25 @@
 			
 			protected function synchronizeFontColor() : void {
 				
-				var val:Number;
+				fontColorCC.selectedColor = CustomStyleManager.getFontColor();
 				
-				val = Number( CustomStyleManager.getStyle("global","color") );
-				fontColorCC.selectedColor = val;
+			}
+			
+			protected function synchronizeFontFamily() : void {
+				
+				fontFamilySpinner.selectedValue = CustomStyleManager.getFontFamily().toLowerCase();
 				
 			}
 			
 			protected function synchronizeBorderColor() : void {			
 				
-				var val:Number  = Number( CustomStyleManager.getStyle("global","borderColor") );
-				borderColorCC.selectedColor = val;
+				borderColorCC.selectedColor = CustomStyleManager.getBorderColor();
 				
 			}
 			
 			protected function synchronizeButtonColor() : void {
 				
-				var val:Number  = Number( CustomStyleManager.getStyle(".button","chromeColor") );
-				buttonColorCC.selectedColor = val;
+				buttonColorCC.selectedColor = CustomStyleManager.getButtonColor();
 				
 			}
 
@@ -82,8 +85,7 @@
 						
 			protected function synchronizeBackgroundColor() : void {
 				
-				var val:Number  = Number( CustomStyleManager.getStyle("s|Application","backgroundColor") );
-				backgroundColorCC.selectedColor = val;	
+				backgroundColorCC.selectedColor = CustomStyleManager.getBackgroundColor();	
 				
 			}
 				
@@ -147,34 +149,29 @@
 			
 			protected function fontColorHandler(event:Event):void
 			{				
-				CustomStyleManager.setStyle("global","color",fontColorCC.selectedColor);	
-				CustomStyleManager.setStyle("#chartPanel","axisColor",fontColorCC.selectedColor );
-				CustomStyleManager.setStyle("s|BusyIndicator","symbolColor",fontColorCC.selectedColor );	
+				CustomStyleManager.setFontColor( fontColorCC.selectedColor );
 				synchronizeFontColor();
 			}
 			protected function fontFamilyHandler(event:Event):void
 			{				
-				/*TODO: Implement */
+				CustomStyleManager.setFontFamily( String(fontFamilySpinner.selectedValue) );
+				synchronizeFontFamily();
 			}			
-			
-			
 			protected function borderColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("global","borderColor",borderColorCC.selectedColor);
+				CustomStyleManager.setBorderColor(borderColorCC.selectedColor);
 				synchronizeBorderColor();
-			}
-			
+			}			
 			protected function backgroundColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("s|Application","backgroundColor",backgroundColorCC.selectedColor);
+				CustomStyleManager.setBackgroundColor(backgroundColorCC.selectedColor);
 				synchronizeBackgroundColor();
 			}
 			
 			protected function buttonColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle(".button","chromeColor",buttonColorCC.selectedColor);
-				CustomStyleManager.setStyle("s|Button","chromeColor",buttonColorCC.selectedColor);
-				synchronizeButtonColor();
+				CustomStyleManager.setButtonColor(buttonColorCC.selectedColor);
+				synchronizeBackgroundColor();
 			}
 			
 			protected function highlightColorHandler(event:Event):void
@@ -234,23 +231,23 @@
 	
 	<s:VGroup id="settingsLabelsGroup" height="100%">
 		<s:Spacer height="100%"/>
-		<s:Label text="Fonts" styleName="fontMedium"/>
+		<s:Label text="Fonts" styleName="myLabel fontMedium"/>
 		<s:Spacer height="200%"/>
-		<s:Label text="Borders" styleName="fontMedium"/>
+		<s:Label text="Borders" styleName="myLabel fontMedium"/>
 		<s:Spacer height="200%"/>
-		<s:Label text="Background" styleName="fontMedium"/>
+		<s:Label text="Background" styleName="myLabel fontMedium"/>
 		<s:Spacer height="200%"/>
-		<s:Label text="Buttons" styleName="fontMedium"/>	
+		<s:Label text="Buttons" styleName="myLabel fontMedium"/>	
 		<s:Spacer height="200%"/>
-		<s:Label text="Selected color" styleName="fontMedium"/>
+		<s:Label text="Selected color" styleName="myLabel fontMedium"/>
 		<s:Spacer height="200%"/>
-		<s:Label text="Selected border" styleName="fontMedium"/>
+		<s:Label text="Selected border" styleName="myLabel fontMedium"/>
 		<s:Spacer height="200%"/>
-		<s:Label text="Serie 1" styleName="fontMedium"/>
+		<s:Label text="Serie 1" styleName="myLabel fontMedium"/>
 		<s:Spacer height="200%"/>
-		<s:Label text="Serie 2" styleName="fontMedium"/>
+		<s:Label text="Serie 2" styleName="myLabel fontMedium"/>
 		<s:Spacer height="200%"/>
-		<s:Label text="Serie 3" styleName="fontMedium"/>
+		<s:Label text="Serie 3" styleName="myLabel fontMedium"/>
 		<s:Spacer height="100%"/>		
 	</s:VGroup>
 	<s:Spacer width="10" />
@@ -258,7 +255,7 @@
 		<s:HGroup width="100%" height="100%">
 			<mx:ColorPicker id="fontColorCC" width="70%" height="100%" change="fontColorHandler(event)"/>
 			<gpc:HSpinner id="fontFamilySpinner" width="40%" height="100%" change="fontFamilyHandler(event)">
-				<s:ArrayCollection source="[Michroma]"/>
+				<s:ArrayCollection source="{FONTS}"/>
 			</gpc:HSpinner>
 		</s:HGroup>	
 		<mx:ColorPicker id="borderColorCC" width="100%" height="100%" change="borderColorHandler(event)"/>

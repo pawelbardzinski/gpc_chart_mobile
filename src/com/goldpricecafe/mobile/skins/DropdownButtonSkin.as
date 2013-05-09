@@ -63,9 +63,7 @@ package com.goldpricecafe.mobile.skins {
 			var x3:Number = x1 + arrowWidth/2;
 			var y1:Number = unscaledHeight/2 - arrowWidth*0.35;
 			var y2:Number = y1;
-			var y3:Number = unscaledHeight/2 + arrowWidth*0.35;
-			
-			var colorLight:uint = ColorUtil.adjustBrightness2(chromeColor,glossiness);
+			var y3:Number = unscaledHeight/2 + arrowWidth*0.35;	
 
 			graphics.beginFill(colorLight);
 			graphics.moveTo(x1,y1);

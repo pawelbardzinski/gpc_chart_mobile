@@ -37,41 +37,55 @@
 	embedAsCFF: false;
 }
 
-/* Common styles */
+@font-face {
+	src: url("Codystar-Light.ttf");
+	fontFamily: codystarCFF;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: true;
+}
+
+@font-face {
+	src: url("Codystar-Light.ttf");
+	fontFamily: codystar;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: false;
+}
+
+@font-face {
+	src: url("LondrinaSketche-Regular.otf");
+	fontFamily: londrinaCFF;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: true;
+}
+
+@font-face {
+	src: url("LondrinaSketche-Regular.otf");
+	fontFamily: londrina;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: false;
+}
+
 global {
 	
-	/* Colors */
 	color: #EEDD00;
-	borderColor: #998800;
+	borderColor: #998800; 
 	fontFamily: michroma;
 	fontWeight: normal;	
 	fontStyle: normal;	
 }
 
-s|VGroup, s|HGroup {
-	gap: 0;
-}
-
-s|BusyIndicator
-{
-	symbolColor: #EEDD00; 
-}
-
-s|Label
-{
-	fontFamily: michromaCFF;
-	fontWeight: normal;	
-	fontStyle: normal;
-}
-
-.button, s|Button, s|RadioButton, s|ButtonBarButton
+.button, .radioBtn
 {
 	fontFamily: michroma;
 	fontWeight: normal;	
 	fontStyle: normal;
 	chromeColor: #000000;
-	paddingBottom: 7;
-	paddingTop: 7;	
+	paddingBottom: 10;
+	paddingTop: 10;	
 	glossiness: 15;
 }
 
@@ -79,6 +93,18 @@ s|Label
 {
 	paddingBottom: 14;
 	paddingTop: 14;	
+}
+
+.myLabel
+{
+	fontFamily: michromaCFF;
+	font-lookup: embeddedCFF;
+}
+
+
+s|BusyIndicator
+{
+	symbolColor: #EEDD00; 
 }
 
 .radioBtn 
@@ -111,11 +137,13 @@ s|Application {
 }
 
 s|TextInput {
+	
 	color: #998800; 
 	contentBackgroundColor: #050505;
 	textAlign: right;
 	paddingBottom: 0;
 	paddingTop: 0;
+	
 }
 
 
@@ -130,7 +158,7 @@ s|TextInput {
 /* Font sizes */
 
 .fontBig {
-	fontSize: 50;
+	fontSize: 52;
 }
 
 .fontMedium {
