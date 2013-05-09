@@ -32,47 +32,46 @@ package com.goldpricecafe.mobile
 		
 		public function getData(currency:String) : Object
 		{
+			
 			var data:Object = {}
-			data[Constants.GOLD] = getGoldPrices( currency );
-			data[Constants.GLD_SLV_RATIO] = getGldSlvRatios();
-			data[Constants.GLD_PLT_RATIO] = getGldPltRatios();
-			data[Constants.GLD_PLD_RATIO] = getGldPldRatios();
+			data[Constants.GOLD] = _data ?  _data[currency] : [];
+			data[Constants.GLD_SLV_RATIO] = _data ?  _data[Constants.GLD_SLV_RATIO] : [];
+			data[Constants.GLD_PLT_RATIO] = _data ?  _data[Constants.GLD_PLT_RATIO] : [];
+			data[Constants.GLD_PLD_RATIO] = _data ?  _data[Constants.GLD_PLD_RATIO] : [];
+			data[Constants.SILVER] = [];
+			data[Constants.PLATINUM] = [];
+			data[Constants.PALLADIUM] = [];
+			
+			if( !data[Constants.GOLD] ) return data;
+			
+			for( var i:uint = 0; i<data[Constants.GOLD].length; i++ ) {
+				
+				var time:Number = data[Constants.GOLD][i][Constants.TIME];
+				var gldPriceToDay:Number = data[Constants.GOLD][i][Constants.TODAY];
+				var gldPrice1DayAgo:Number = data[Constants.GOLD][i][Constants.ONE_DAY_AGO];
+				var gldPrice2DaysAgo:Number = data[Constants.GOLD][i][Constants.TWO_DAYS_AGO];
+				
+				data[Constants.SILVER][i] = {};
+				data[Constants.SILVER][i][Constants.TIME] = time;
+				data[Constants.SILVER][i][Constants.TODAY] = gldPriceToDay / data[Constants.GLD_SLV_RATIO][i][Constants.TODAY];
+				data[Constants.SILVER][i][Constants.ONE_DAY_AGO] = gldPrice1DayAgo / data[Constants.GLD_SLV_RATIO][i][Constants.ONE_DAY_AGO];
+				data[Constants.SILVER][i][Constants.TWO_DAYS_AGO] = gldPrice2DaysAgo / data[Constants.GLD_SLV_RATIO][i][Constants.TWO_DAYS_AGO];	
+				
+				data[Constants.PLATINUM][i] = {};
+				data[Constants.PLATINUM][i][Constants.TIME] = time;
+				data[Constants.PLATINUM][i][Constants.TODAY] = gldPriceToDay / data[Constants.GLD_PLT_RATIO][i][Constants.TODAY];
+				data[Constants.PLATINUM][i][Constants.ONE_DAY_AGO] = gldPrice1DayAgo / data[Constants.GLD_PLT_RATIO][i][Constants.ONE_DAY_AGO];
+				data[Constants.PLATINUM][i][Constants.TWO_DAYS_AGO] = gldPrice2DaysAgo / data[Constants.GLD_PLT_RATIO][i][Constants.TWO_DAYS_AGO];				
+
+				data[Constants.PALLADIUM][i] = {};
+				data[Constants.PALLADIUM][i][Constants.TIME] = time;
+				data[Constants.PALLADIUM][i][Constants.TODAY] = gldPriceToDay / data[Constants.GLD_PLD_RATIO][i][Constants.TODAY];
+				data[Constants.PALLADIUM][i][Constants.ONE_DAY_AGO] = gldPrice1DayAgo / data[Constants.GLD_PLD_RATIO][i][Constants.ONE_DAY_AGO];
+				data[Constants.PALLADIUM][i][Constants.TWO_DAYS_AGO] = gldPrice2DaysAgo / data[Constants.GLD_PLD_RATIO][i][Constants.TWO_DAYS_AGO];
+			}
 			
 			return data;
-		}
-		
-		public function getGoldPrices(currency:String):Array
-		{
-			if(_data) {
-				return _data[currency];
-			}
-			
-			return [];
-		}
-		
-		public function getGldSlvRatios():Array
-		{
-			if(_data) {
-				return _data[Constants.GLD_SLV_RATIO];
-			}
-			return [];
-		}
-		
-		public function getGldPltRatios():Array
-		{
-			if(_data) {
-				return _data[Constants.GLD_PLT_RATIO];
-			}			
-			return [];
-		}
-		
-		public function getGldPldRatios():Array
-		{
-			if(_data) {
-				return _data[Constants.GLD_PLD_RATIO];
-			}			
-			return [];
-		}		
+		}			
 		
 		public function getNextUpdateTime():Date
 		{
@@ -166,7 +165,14 @@ package com.goldpricecafe.mobile
 					
 				} else if (record.length == 4) { // Data
 					
-					data[type][itr] = [parseTime(record[0]), parsePrice(record[1]), parsePrice(record[2]), parsePrice(record[3])];
+					//data[type][itr] = [parseTime(record[0]), parsePrice(record[1]), parsePrice(record[2]), parsePrice(record[3])];
+					
+					data[type][itr] = {};
+					data[type][itr][Constants.TIME] = parseTime(record[0]);
+					data[type][itr][Constants.TODAY] = parsePrice(record[1]);
+					data[type][itr][Constants.ONE_DAY_AGO] = parsePrice(record[2]);
+					data[type][itr][Constants.TWO_DAYS_AGO] = parsePrice(record[3]);
+					
 					itr++;
 					
 				} 
@@ -174,7 +180,7 @@ package com.goldpricecafe.mobile
 			
 			return data;
 			
-		}
+		}		
 		
 		public function parseTime( time:String ) : Number {
 			

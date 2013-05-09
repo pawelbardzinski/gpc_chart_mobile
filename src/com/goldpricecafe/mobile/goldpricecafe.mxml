@@ -36,18 +36,13 @@
 							  fractionalDigits="2" 
 							  useGrouping="true"
 							  groupingSeparator="," />
-		<s:NumberFormatter id="amountFormatOz"  
+		<s:NumberFormatter id="amountFormat"  
 							  decimalSeparator="." 
 							  errorText="0.00" 
 							  fractionalDigits="2" 
 							  useGrouping="true"
 							  groupingSeparator=","/>
-		<s:NumberFormatter id="amountFormatGr" 
-							  decimalSeparator="." 
-							  errorText="0.00" 
-							  fractionalDigits="4" 
-							  useGrouping="true"
-							  groupingSeparator="," />		
+	
 		
 		<s:Animate id="fader"
 				   duration="500"
@@ -61,11 +56,13 @@
 	<fx:Script>
 
 		<![CDATA[	
+			
 			import com.goldpricecafe.mobile.Constants;
 			
 			import mx.collections.ArrayList;
 			import mx.events.FlexEvent;
 			import mx.events.PropertyChangeEvent;
+			
 			
 			protected static const DATA_PROVIDER_CLASS:Class = com.goldpricecafe.mobile.DataProvider;
 			
@@ -85,7 +82,14 @@
 				_chartType = type;
 				chartPanel.chartType = type;
 				chartTypeRadioGroup.selectedValue = type;
-				updateChartData();
+				
+				if(_chartType == Constants.MY_STACK) {
+					updateMyStack();
+				}
+				
+				if(_chartData) {
+					chartPanel.chart.dataProvider = _chartData[_chartType];
+				}
 				
 			}	
 			public function get chartType() : String {
@@ -103,9 +107,8 @@
 				_weightUnits = units;
 				chartPanel.weightUnits = units;
 				unitsRedioGroup.selectedValue = units;
-				
+
 				updateMyStack();
-				updateChartData();
 				
 			}	
 			public function get weightUnits() : String {
@@ -138,11 +141,9 @@
 				
 				_currency = currency;
 				chartPanel.currency = currency;
-				//currencyCombo.selectedItem = currency;
-				//currencyCombo.prompt = currency.toUpperCase();
-				
-				updateChartData();
 				currencyBtn.label = currency;
+				
+				updateChartData();			
 				
 			}	
 			public function get currency( ) : String {
@@ -151,7 +152,7 @@
 				
 			}
 			
-			/** Sets gold ammount of "My Stack" expressed in current weight units.
+			/** Amount of gold in "My Stack" expressed in current weight units.
 			 *  Internaly it is stored in ounces.
 			 */
 			[Bindable]
@@ -163,7 +164,7 @@
 					_myStackGldOz = val;
 				}
 				
-				dispatchEvent( new PropertyChangeEvent("myStackGoldValueChanged",false,false,null,"myStackGoldValue"));
+				updateMyStack();
 				
 			}
 			public function get myStackGold() : Number {
@@ -176,6 +177,80 @@
 				
 			}	
 			
+			/** Amount of silver in "My Stack" expressed in current weight units.
+			 *  Internaly it is stored in ounces.
+			 */
+			[Bindable]
+			public function set myStackSilver( val:Number ) : void {
+				
+				if (weightUnits == Constants.UNITS_GR ) {
+					_myStackSlvOz = val * Constants.GROZ_RATIO;
+				} else {
+					_myStackSlvOz = val;
+				}
+				
+				updateMyStack();
+				
+			}
+			public function get myStackSilver() : Number {
+				
+				if (weightUnits == Constants.UNITS_GR ) {
+					return _myStackSlvOz / Constants.GROZ_RATIO;
+				} else {
+					return _myStackSlvOz;
+				}
+				
+			}
+			
+			/** Amount of platinum in "My Stack" expressed in current weight units.
+			 *  Internaly it is stored in ounces.
+			 */
+			[Bindable]
+			public function set myStackPlatinum( val:Number ) : void {
+				
+				if (weightUnits == Constants.UNITS_GR ) {
+					_myStackPltOz = val * Constants.GROZ_RATIO;
+				} else {
+					_myStackPltOz = val;
+				}
+				
+				updateMyStack();
+				
+			}
+			public function get myStackPlatinum() : Number {
+				
+				if (weightUnits == Constants.UNITS_GR ) {
+					return _myStackPltOz / Constants.GROZ_RATIO;
+				} else {
+					return _myStackPltOz;
+				}
+				
+			}
+			
+			/** Amount of palladium in "My Stack" expressed in current weight units.
+			 *  Internaly it is stored in ounces.
+			 */
+			[Bindable]
+			public function set myStackPalladium( val:Number ) : void {
+				
+				if (weightUnits == Constants.UNITS_GR ) {
+					_myStackPldOz = val * Constants.GROZ_RATIO;
+				} else {
+					_myStackPldOz = val;
+				}
+				
+				updateMyStack();
+				
+			}
+			public function get myStackPalladium() : Number {
+				
+				if (weightUnits == Constants.UNITS_GR ) {
+					return _myStackPldOz / Constants.GROZ_RATIO;
+				} else {
+					return _myStackPldOz;
+				}
+				
+			}			
 			
 			[Bindable]
 			public function set busy( val:Boolean ) : void {
@@ -222,7 +297,12 @@
 			protected var _gldSlvRatios:Array;
 			protected var _gldPltRatios:Array;
 			protected var _gldPldRatios:Array;
-			protected var _gldPrice:Number;
+			
+			protected var _chartData:Object;
+			protected var _currentGldPriceOz:Number = 0;
+			protected var _currentSlvPriceOz:Number = 0;
+			protected var _currentPltPriceOz:Number = 0;
+			protected var _currentPldPriceOz:Number = 0;
 			
 			/* My stack */
 			
@@ -268,33 +348,10 @@
 			
 			protected function updateButtons() : void {
 				
-				if(!_gldPrices || _gldPrices.length == 0 ) return;
-				
-				var lastPrice:Number;
-				var i:int = _gldPrices.length-1;
-				
-				while( i >= 0 && isNaN(lastPrice = calculatePrices(i, Constants.GOLD )[0]) ) {
-					i--;
-				}
-				goldBtn.label = "Gld: " + buttonsCurrFormat.format(lastPrice);
-				
-				i = _gldPrices.length-1;
-				while( i >= 0 && isNaN(lastPrice = calculatePrices(i, Constants.SILVER )[0]) ) {
-					i--;
-				}
-				silverBtn.label = "Slv: " + buttonsCurrFormat.format(lastPrice);				
-
-				i = _gldPrices.length-1;
-				while( i >= 0 && isNaN(lastPrice = calculatePrices(i, Constants.PLATINUM )[0]) ) {
-					i--;
-				}
-				platinumBtn.label = "Plt: " + buttonsCurrFormat.format(lastPrice);
-				
-				i = _gldPrices.length-1;
-				while( i >= 0 && isNaN(lastPrice = calculatePrices(i, Constants.PALLADIUM )[0]) ) {
-					i--;
-				}
-				palladiumBtn.label = "Plt: " + buttonsCurrFormat.format(lastPrice);				
+				goldBtn.label = "Gld: " + buttonsCurrFormat.format(_currentGldPriceOz);
+				silverBtn.label = "Slv: " + buttonsCurrFormat.format(_currentSlvPriceOz);				
+				platinumBtn.label = "Plt: " + buttonsCurrFormat.format(_currentPltPriceOz);
+				palladiumBtn.label = "Pld: " + buttonsCurrFormat.format(_currentPldPriceOz);				
 			}
 						
 				
@@ -319,144 +376,110 @@
 			protected function updateMyStack() : void {
 				
 				var fract:uint;
-				var formater:NumberFormatter;
+				var formater:NumberFormatter = amountFormat;
 				var maxChars:uint;
-				
-				// Number format depends on the weight units
-				if(weightUnits == Constants.UNITS_OZ) {
-					
-					fract = 2;
-					formater = amountFormatOz;
-									
-				} else {
-					
-					fract = 4;
-					formater = amountFormatGr;	
-					
-				}
-				maxChars = 2 + 2*fract;
+				var sum:Number = 0;
 				
 				/* Gold */
 				pmcGoldLabel.text = 'Gold ' + firstUp(weightUnits) + ':';
-				goldOzCalc.text = formater.format(myStackGold); 
-				accGold.setStyle("maxChars",maxChars);
-				accGold.text = buttonsCurrFormat.format(myStackGold) + ' ' + currency.toUpperCase();	
+				goldOzCalc.numericValue = myStackGold; 
+				accGold.text = buttonsCurrFormat.format(_currentGldPriceOz * _myStackGldOz) + ' ' + currency.toUpperCase();	
+				sum += _currentGldPriceOz * _myStackGldOz;
+				
+				/* Silver */
+				pmcSilverLabel.text = 'Silver ' + firstUp(weightUnits) + ':';
+				silverOzCalc.numericValue = myStackSilver; 
+				accSilver.text = buttonsCurrFormat.format(_currentSlvPriceOz * _myStackSlvOz) + ' ' + currency.toUpperCase();
+				sum += _currentSlvPriceOz * _myStackSlvOz;
+				
+				/* Platinum */
+				pmcPlatinumLabel.text = 'Platinum ' + firstUp(weightUnits) + ':';
+				platinumOzCalc.numericValue = myStackPlatinum; 
+				accPlatinum.text = buttonsCurrFormat.format(_currentPltPriceOz * _myStackPltOz) + ' ' + currency.toUpperCase();	
+				sum += _currentPltPriceOz * _myStackPltOz;
+				
+				/* Palladium */
+				pmcPalladiumLabel.text = 'Palladium ' + firstUp(weightUnits) + ':';
+				palladiumOzCalc.numericValue = myStackPalladium; 
+				accPalladium.text = buttonsCurrFormat.format(_currentPldPriceOz * _myStackPldOz) + ' ' + currency.toUpperCase();
+				sum += _currentPldPriceOz * _myStackPldOz;
+				
+				/* Total */
+				totalWorth.text = buttonsCurrFormat.format( sum );
+				
+				/* Update chart if visible */
+				if(chartType == Constants.MY_STACK) {
+					chartMyStack();
+					chartPanel.chart.dataProvider = _chartData[Constants.MY_STACK];
+				}
 				
 			}
-			
+								
 			protected function updateChartData() : void {
 				
 				if( !_dataProvider ) return;
 				
-				var data:Object = _dataProvider.getData(currency);
+				_chartData = _dataProvider.getData(currency);
 				
-				_gldPrices = data[Constants.GOLD];
-				_gldSlvRatios = data[Constants.GLD_SLV_RATIO];
-				_gldPltRatios = data[Constants.GLD_PLT_RATIO];
-				_gldPldRatios = data[Constants.GLD_PLD_RATIO];				
-				
-				var data1:ArrayList = new ArrayList();
-				var data2:ArrayList = new ArrayList();
-				var data3:ArrayList = new ArrayList();
-				
-				if( _gldPrices != null ) {
+				/* Find last prices */
+				if(_chartData) {
 					
-					for( var i:uint=0; i<_gldPrices.length; i++ ) {
-						
-						if(i >= _gldPrices.length) break;
-						
-						var time:int = _gldPrices[i][0];
-						var prices:Array = calculatePrices(i,_chartType);
-						
-						data1.addItem( { "time":time, "value":prices[0] } );
-						data2.addItem( { "time":time, "value":prices[1] } );
-						data3.addItem( { "time":time, "value":prices[2] } );	
-						
+					var i:int;
+					
+					i = _chartData[Constants.GOLD].length-1;
+					while( (i>=0) && isNaN(_currentGldPriceOz = _chartData[Constants.GOLD][i][Constants.TODAY]) ) {
+						i--;
 					}
-					
+					i = _chartData[Constants.SILVER].length-1;
+					while( (i>=0) && isNaN(_currentSlvPriceOz = _chartData[Constants.SILVER][i][Constants.TODAY]) ) {
+						i--;
+					}	
+					i = _chartData[Constants.PLATINUM].length-1;
+					while( (i>=0) && isNaN(_currentPltPriceOz = _chartData[Constants.PLATINUM][i][Constants.TODAY]) ) {
+						i--;
+					}
+					i = _chartData[Constants.PALLADIUM].length-1;
+					while( (i>=0) && isNaN(_currentPldPriceOz = _chartData[Constants.PALLADIUM][i][Constants.TODAY]) ) {
+						i--;
+					}					
 				}
 				
-				chartPanel.serie1.dataProvider = data1;				
-				chartPanel.serie2.dataProvider = data2;
-				chartPanel.serie3.dataProvider = data3;	
+				/* Set chart data provider */				
+				chartPanel.chart.dataProvider = new ArrayList(_chartData[chartType]);
 				
+				/* Update button labels */
 				updateButtons();
 				
-			}			
-			
-			
-			protected function calculatePrices( index:uint, chartType:String ) : Array {
-				
-				
-				if((!_gldPrices) || (index > _gldPrices.length) ) return [null,null,null];
-				
-				var wightScale:Number = ( _weightUnits == Constants.UNITS_GR ) ? Constants.GROZ_RATIO : 1.0;
-				var prices:Array = [null, null, null];
-				var i:uint;
-				
-				switch( chartType ) {
-					
-					case Constants.GOLD :
-						
-						for( i=0; i<3; i++ ) 
-						{							
-							prices[i] = _gldPrices[index][i+1] * wightScale;							
-						}		
-						return prices;
-						
-					case Constants.SILVER :
-						
-						if((!_gldSlvRatios) || (index > _gldSlvRatios.length) ) return [null,null,null];			
-						for( i=0; i<3; i++ ) 
-						{				
-							prices[i] = _gldPrices[index][i+1] / _gldSlvRatios[index][i+1] * wightScale;						
-						}				
-						return prices;	
-						
-					case Constants.PLATINUM :
-						
-						if((!_gldPltRatios) || (index > _gldPltRatios.length) ) return [null,null,null];
-						for( i=0; i<3; i++ ) 
-						{	
-							prices[i] = _gldPrices[index][i+1] / _gldPltRatios[index][i+1] * wightScale;	
-						}
-						return prices;		
-						
-					case Constants.PALLADIUM :
-						
-						if((!_gldPldRatios) || (index > _gldPldRatios.length) ) return [null,null,null];
-						for( i=0; i<3; i++ ) {							
-							prices[i] = _gldPrices[index][i+1] / _gldPldRatios[index][i+1] * wightScale;						
-						}		
-						return prices;							
-						
-					case Constants.GLD_PLT_RATIO :
-						
-						if((!_gldSlvRatios) || (index > _gldSlvRatios.length) ) return [null,null,null];
-						for( i=0; i<3; i++ ) 
-						{						
-							prices[i] = _gldPltRatios[index][i+1];						
-						}
-						
-						return prices;						
-						
-					case Constants.GLD_SLV_RATIO :
-						
-						if((!_gldSlvRatios) || (index > _gldSlvRatios.length) ) return [null,null,null];
-						for( i=0; i<3; i++ ) 
-						{							
-							prices[i] = _gldSlvRatios[index][i+1];							
-						}				
-						return prices;
-						
-					default:
-						
-						return [null,null,null];					
-						
-				}				
-				
+				/* Update "My Stack" labels */
+				updateMyStack();				
 				
 			}
+			
+			protected function chartMyStack() : void {
+				
+				if(!_chartData) return;
+				
+				_chartData[Constants.MY_STACK] = [];
+				var days:Array = [Constants.TODAY,Constants.ONE_DAY_AGO,Constants.TWO_DAYS_AGO];
+				
+				for( var i:uint = 0; i < _chartData[Constants.GOLD].length; i++ ) {
+					
+					_chartData[Constants.MY_STACK][i] = {};
+					_chartData[Constants.MY_STACK][i][Constants.TIME] = _chartData[Constants.GOLD][i][Constants.TIME];
+					
+					for( var j:int = 0; j<days.length; j++ ) {
+						
+						var day:String = days[j];
+						_chartData[Constants.MY_STACK][i][day] = _chartData[Constants.GOLD][i][day] * _myStackGldOz +
+																 _chartData[Constants.SILVER][i][day] * _myStackSlvOz +
+																 _chartData[Constants.PALLADIUM][i][day] * _myStackPldOz +
+																 _chartData[Constants.PLATINUM][i][day] * _myStackPltOz;
+						
+					}
+				}
+				
+			}
+						
 			
 			protected function firstUp( val:String ) : String {
 				
@@ -517,6 +540,10 @@
 				/* Initialize data provider */
 				_dataProvider = new DATA_PROVIDER_CLASS();
 				_dataProvider.addEventListener( "newData", newDataHandler );
+				
+				/* Iniialize MyStack */
+				myStackGold = 0;
+				myStackSilver = 0;
 				
 				/* Initialize timer */
 				_timer.addEventListener( TimerEvent.TIMER,timerHandler );
@@ -645,27 +672,27 @@
 				
 				<s:VGroup width="20%" height="100%" gap="2">
 					<s:Label id="pmcGoldLabel" styleName="fontVerySmall" />
-					<s:TextInput id="goldOzCalc" maxChars="6" styleName="fontSmall" width="100%" change="{myStackGold = parseFloat(goldOzCalc.text)}" />
+					<gpc:NumberInput id="goldOzCalc" maxChars="6" styleName="fontSmall" width="100%" numberFormater="{amountFormat}" numericValue="@{myStackGold}"/>
 					<s:Label id="accGold" styleName="fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
 					<s:Label id="pmcSilverLabel" text="{'Silver ' + firstUp(weightUnits) + ':'}" styleName="fontVerySmall" />
-					<s:TextInput id="silverOzCalc" maxChars="6" text="0.00" styleName="fontSmall" width="100%"  />
+					<gpc:NumberInput id="silverOzCalc" maxChars="6" styleName="fontSmall" width="100%" numberFormater="{amountFormat}" numericValue="@{myStackSilver}"/>
 					<s:Label id="accSilver" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
 					<s:Label id="pmcPlatinumLabel" text="{'Platinum ' + firstUp(weightUnits) + ':'}" styleName="fontVerySmall" />
-					<s:TextInput id="platinumOzCalc" maxChars="6" text="0.00" styleName="fontSmall" width="100%" />
+					<gpc:NumberInput id="platinumOzCalc" maxChars="6" styleName="fontSmall" width="100%" numberFormater="{amountFormat}" numericValue="@{myStackPlatinum}"/>
 					<s:Label id="accPlatinum" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
 					<s:Label id="pmcPalladiumLabel" text="{'Palladium ' + firstUp(weightUnits) + ':'}" styleName="fontVerySmall" />
-					<s:TextInput id="palladiumOzCalc" maxChars="6" text="0.00" styleName="fontSmall" width="100%" />
+					<gpc:NumberInput id="palladiumOzCalc" maxChars="6" styleName="fontSmall" width="100%" numberFormater="{amountFormat}" numericValue="@{myStackPalladium}"/>
 					<s:Label id="accPalladium" text="0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>
 				<s:VGroup width="20%" height="100%" gap="2">
 					<s:Spacer height="100%"/>
-					<s:Button id="indivChartBtn" label="Chart My Stack!" styleName="button bigButton fontMedium"/>
+					<s:RadioButton id="indivChartBtn" group="{chartTypeRadioGroup}" value="{Constants.MY_STACK}" label="Chart My Stack!" styleName="button bigButton fontMedium"/>
 					<s:Label id="totalWorth" text="Total: 0.00 USD" styleName="fontVerySmall" />				
 				</s:VGroup>		
 				

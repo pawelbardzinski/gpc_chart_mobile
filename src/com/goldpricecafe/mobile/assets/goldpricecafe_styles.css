@@ -101,8 +101,8 @@ s|Application {
 
 #chartPanel {
 	
-	serie1Color: #FFFF00;
-	serie2Color: #AAAA00;
+	serie1Color: #EEEE00;
+	serie2Color: #EEEE00;
 	serie3Color: #777700;	
 	serie1Width: 2;
 	serie2Width: 1;
@@ -112,8 +112,10 @@ s|Application {
 
 s|TextInput {
 	color: #998800; 
-	contentBackgroundColor: #151515;
+	contentBackgroundColor: #050505;
 	textAlign: right;
+	paddingBottom: 0;
+	paddingTop: 0;
 }
 
 

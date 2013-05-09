@@ -8,7 +8,12 @@ package com.goldpricecafe.mobile
 			"INR","JPY","KWD","MXN","MYR","NZD","PEN","PHP","RUR","SEK","SGD",
 			"TRY","USD","VUV","ZAR"];
 		
-		/* Chart types */
+		/* Chart types and data table fields */
+		
+		public static const TIME:String = "Time";
+		public static const TODAY:String = "today";
+		public static const ONE_DAY_AGO:String = "oneDayAgo";		
+		public static const TWO_DAYS_AGO:String = "twoDaysAgo";	
 		
 		public static const GOLD:String = "Gold";
 		public static const SILVER:String = "Silver";
@@ -16,7 +21,10 @@ package com.goldpricecafe.mobile
 		public static const PALLADIUM:String = "Palladium";
 		public static const GLD_SLV_RATIO:String = "gldslv";
 		public static const GLD_PLT_RATIO:String = "gldplt";
-		public static const GLD_PLD_RATIO:String = "gldpld";		
+		public static const GLD_PLD_RATIO:String = "gldpld";
+		public static const MY_STACK:String = "myStack";
+		
+		
 		/* Data ranges */
 		
 		public static const RANGE_3DAYS:uint = 0;

@@ -13,9 +13,7 @@
 	
 	<fx:Metadata>
 		[Style(name="axisColor",type="Number",format="Color",inherit="yes")]
-		[Style(name="gridColor",type="Number",format="Color",inherit="yes")]
-		[Style(name="serie2Color",type="Number",format="Color",inherit="yes")]
-		[Style(name="serie2Color",type="Number",format="Color",inherit="yes")]		
+		[Style(name="gridColor",type="Number",format="Color",inherit="yes")]		
 		[Style(name="serie1Color",type="Number",format="Color",inherit="yes")]
 		[Style(name="serie2Color",type="Number",format="Color",inherit="yes")]
 		[Style(name="serie3Color",type="Number",format="Color",inherit="yes")]
@@ -42,8 +40,8 @@
 	
 	<fx:Script>
 		<![CDATA[
-			
 			import mx.charts.chartClasses.IAxis;
+			import mx.charts.chartClasses.Series;
 			import mx.events.FlexEvent;
 			
 			//////////////////////////////////////////////////////
@@ -59,9 +57,9 @@
 			[Bindable]
 			public function set chartType( type:String ) : void {
 				
-				_chartType = type;
+				_chartType = type;				
 				updateChartTitle();
-
+				forceRedraw();
 				
 			}	
 			public function get chartType() : String {
@@ -76,8 +74,10 @@
 			[Bindable]
 			public function set weightUnits( units:String ) : void {
 				
-				_weightUnits = units;
+				_weightUnits = units;			
 				updateChartTitle();
+				forceRedraw();
+	
 				
 			}	
 			public function get weightUnits() : String {
@@ -128,7 +128,28 @@
 				
 				return _currency;
 				
-			}			
+			}
+			
+			public function forceRedraw() : void {
+				
+				switch(_chartType) {
+					
+					case Constants.GLD_PLD_RATIO:
+					case Constants.GLD_PLT_RATIO:
+					case Constants.GLD_SLV_RATIO:
+					case Constants.MY_STACK:
+						
+						_scale = 1;
+						break;
+					
+					default:
+						
+						_scale = _weightUnits == Constants.UNITS_GR ? Constants.GROZ_RATIO : 1;
+				}
+				
+				chart.series = chart.series;
+				
+			}
 			
 			//////////////////////////////////////////////////
 			//                                     			//
@@ -139,7 +160,8 @@
 			protected var _dataRange:uint;
 			protected var _weightUnits:String;
 			protected var _currency:String;
-			protected var _chartType:String;			
+			protected var _chartType:String;
+			protected var _scale:Number = 1;
 			
 			protected function updateChartTitle() : void {
 				
@@ -183,7 +205,7 @@
 				}
 				
 				chartLabel.text = chartTitle;
-				varticalAxis.title = axisTitle;
+				verticalAxis.title = axisTitle;
 				
 			}
 			
@@ -217,6 +239,18 @@
 				
 				horizontalAxis.minimum = min;
 				horizontalAxis.maximum = max;							
+				
+			}
+			
+			public function seriesDataFunction( series:Series, item:Object, fieldName:String ):Object {
+				
+				var s:LineSeries = LineSeries( series );
+				
+				if( fieldName == "yValue" ) {
+					return item[s.yField] * _scale;
+				} else {
+					return item[s.xField];
+				}
 				
 			}
 			
@@ -337,10 +371,10 @@
 		
 		<!-- Vertical Axis -->
 		<mx:verticalAxis>
-			<mx:LinearAxis id="varticalAxis" baseAtZero="false" labelFunction="{vLabelFunction}"/>
+			<mx:LinearAxis id="verticalAxis" baseAtZero="false" labelFunction="{vLabelFunction}" />
 		</mx:verticalAxis>
 		<mx:verticalAxisRenderers>					
-			<mx:AxisRenderer id="verticalAxisRenderer" axis="{varticalAxis}" styleName="fontSmall">
+			<mx:AxisRenderer id="verticalAxisRenderer" axis="{verticalAxis}" styleName="fontSmall">
 				<mx:axisStroke>
 					<mx:SolidColorStroke id="verticalAxisStroke" weight="1" color="{getStyle('color')}"/>
 				</mx:axisStroke>							
@@ -373,9 +407,9 @@
 		
 		<!-- Series -->
 		<mx:series>
-			<mx:LineSeries id="serie1" interpolateValues="true" lineStroke="{serie1LineStroke}" xField="time" yField="value" selectable="true" />
-			<mx:LineSeries id="serie2" interpolateValues="true" lineStroke="{serie2LineStroke}" xField="time" yField="value" selectable="true" />
-			<mx:LineSeries id="serie3" interpolateValues="true" lineStroke="{serie3LineStroke}" xField="time" yField="value" selectable="true" />	
+			<mx:LineSeries id="serie1" interpolateValues="true" lineStroke="{serie1LineStroke}" xField="{Constants.TIME}" yField="{Constants.TODAY}" selectable="true" dataFunction="{seriesDataFunction}"/>
+			<mx:LineSeries id="serie2" interpolateValues="true" lineStroke="{serie2LineStroke}" xField="{Constants.TIME}" yField="{Constants.ONE_DAY_AGO}" selectable="true" dataFunction="{seriesDataFunction}" />
+			<mx:LineSeries id="serie3" interpolateValues="true" lineStroke="{serie3LineStroke}" xField="{Constants.TIME}" yField="{Constants.TWO_DAYS_AGO}" selectable="true" dataFunction="{seriesDataFunction}" />	
 		</mx:series>
 		
 	</mx:LineChart>	

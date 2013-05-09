@@ -4,11 +4,7 @@ package com.goldpricecafe.mobile
 
 	public interface IDataProvider extends IEventDispatcher
 	{	
-		function getData( currency:String ) : Object;
-		function getGoldPrices( currency:String ) : Array;
-		function getGldSlvRatios() : Array;
-		function getGldPltRatios() : Array;
-		function getGldPldRatios() : Array;		
+		function getData( currency:String ) : Object;	
 		function getNextUpdateTime() : Date;
 	}
 }
