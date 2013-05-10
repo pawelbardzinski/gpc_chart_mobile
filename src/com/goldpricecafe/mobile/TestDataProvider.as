@@ -3,17 +3,16 @@ package com.goldpricecafe.mobile
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
-	import flash.utils.ByteArray;
 	import flash.utils.Timer;
 	
-	import nochump.util.zip.ZipEntry;
-	import nochump.util.zip.ZipFile;
+	import mx.core.FlexGlobals;
+
 	
 	public class TestDataProvider extends EventDispatcher implements IDataProvider 
 	{
 		
 		public static const NEW_DATA:String = "newData";	
-		private var _timer:Timer = new Timer(5*1000);
+		private var _timer:Timer = new Timer(30*1000);
 		private var _nextUpdate:Date;
 		
 		
@@ -23,134 +22,104 @@ package com.goldpricecafe.mobile
 			_timer.start();
 			_nextUpdate = new Date();
 			_nextUpdate.milliseconds = _nextUpdate.milliseconds + _timer.delay;
+			
+			FlexGlobals.topLevelApplication.callLater( function() : void {
+				dispatchEvent( new Event(NEW_DATA) );
+			});
+			
 		}
 		
 		protected function timerHandler( e:Event ) : void {
 
 			_nextUpdate = new Date();
 			_nextUpdate.milliseconds = _nextUpdate.milliseconds + _timer.delay;
-			var myEvent:Event = new Event(NEW_DATA);
-			dispatchEvent( myEvent );
+			
+			dispatchEvent( new Event(NEW_DATA)  );
 			
 		}
 		
-		public function getGoldPrices( currency:String ) : Array {
+		public function getData(currency:String) : Object
+		{
 			
-			var data:Array = [];
-			var min:uint = 0;
-			var hour:uint = 0;
-			var i:uint = 0;
+			var data:Object = {}
+			data[Constants.GOLD] = getGoldPrices(currency);
+			data[Constants.GLD_SLV_RATIO] = getGldSlvRatios();
+			data[Constants.GLD_PLT_RATIO] = getGldPltRatios();
+			data[Constants.GLD_PLD_RATIO] = getGldPldRatios();
+			data[Constants.SILVER] = [];
+			data[Constants.PLATINUM] = [];
+			data[Constants.PALLADIUM] = [];
 			
-			while( (hour < 24) || (min == 0) ) {
+			if( !data[Constants.GOLD] ) return data;
+			
+			for( var i:uint = 0; i<data[Constants.GOLD].length; i++ ) {
 				
-				var ts:String = "05/03/2013 ";
-				ts += ( hour < 10 ? "0" + hour.toString() : hour.toString() );
-				ts += ( min  < 10 ? ":0" + min.toString() : ":" + min.toString() );
-				ts += ":00 UTC";
+				var time:Number = data[Constants.GOLD][i][Constants.TIME];
+				var gldPriceToDay:Number = data[Constants.GOLD][i][Constants.TODAY];
+				var gldPrice1DayAgo:Number = data[Constants.GOLD][i][Constants.ONE_DAY_AGO];
+				var gldPrice2DaysAgo:Number = data[Constants.GOLD][i][Constants.TWO_DAYS_AGO];
 				
-				data[i] = [ts, Math.random(), Math.random(), Math.random() ];
+				data[Constants.SILVER][i] = {};
+				data[Constants.SILVER][i][Constants.TIME] = time;
+				data[Constants.SILVER][i][Constants.TODAY] = gldPriceToDay / data[Constants.GLD_SLV_RATIO][i][Constants.TODAY];
+				data[Constants.SILVER][i][Constants.ONE_DAY_AGO] = gldPrice1DayAgo / data[Constants.GLD_SLV_RATIO][i][Constants.ONE_DAY_AGO];
+				data[Constants.SILVER][i][Constants.TWO_DAYS_AGO] = gldPrice2DaysAgo / data[Constants.GLD_SLV_RATIO][i][Constants.TWO_DAYS_AGO];	
 				
-				min += 2;
-				if( min == 60 ) {
-					min = 0;
-					hour += 1;
-				}
+				data[Constants.PLATINUM][i] = {};
+				data[Constants.PLATINUM][i][Constants.TIME] = time;
+				data[Constants.PLATINUM][i][Constants.TODAY] = gldPriceToDay / data[Constants.GLD_PLT_RATIO][i][Constants.TODAY];
+				data[Constants.PLATINUM][i][Constants.ONE_DAY_AGO] = gldPrice1DayAgo / data[Constants.GLD_PLT_RATIO][i][Constants.ONE_DAY_AGO];
+				data[Constants.PLATINUM][i][Constants.TWO_DAYS_AGO] = gldPrice2DaysAgo / data[Constants.GLD_PLT_RATIO][i][Constants.TWO_DAYS_AGO];				
 				
-				i++;
-				
+				data[Constants.PALLADIUM][i] = {};
+				data[Constants.PALLADIUM][i][Constants.TIME] = time;
+				data[Constants.PALLADIUM][i][Constants.TODAY] = gldPriceToDay / data[Constants.GLD_PLD_RATIO][i][Constants.TODAY];
+				data[Constants.PALLADIUM][i][Constants.ONE_DAY_AGO] = gldPrice1DayAgo / data[Constants.GLD_PLD_RATIO][i][Constants.ONE_DAY_AGO];
+				data[Constants.PALLADIUM][i][Constants.TWO_DAYS_AGO] = gldPrice2DaysAgo / data[Constants.GLD_PLD_RATIO][i][Constants.TWO_DAYS_AGO];
 			}
 			
 			return data;
+		}		
+		
+		public function getGoldPrices( currency:String ) : Array {
+			
+			return generateRandomPrices();
 			
 		}
 		
 		public function getGldSlvRatios() : Array {
 			
-			var data:Array = [];
-			var min:uint = 0;
-			var hour:uint = 0;
-			var i:uint = 0;
-			
-			while( (hour < 24) || (min == 0) ) {
-				
-				var ts:String = "05/03/2013 ";
-				ts += ( hour < 10 ? "0" + hour.toString() : hour.toString() );
-				ts += ( min  < 10 ? ":0" + min.toString() : ":" + min.toString() );
-				ts += ":00 UTC";
-				
-				data[i] = [ts, Math.random(), Math.random(), Math.random() ];
-				
-				min += 2;
-				if( min == 60 ) {
-					min = 0;
-					hour += 1;
-				}
-				
-				i++;
-				
-			}
-			
-			return data;
+			return generateRandomPrices();
 			
 		}
 		
 		public function getGldPltRatios() : Array {
 			
-			var data:Array = [];
-			var min:uint = 0;
-			var hour:uint = 0;
-			var i:uint = 0;
-			
-			while( (hour < 24) || (min == 0) ) {
-				
-				var ts:String = "05/03/2013 ";
-				ts += ( hour < 10 ? "0" + hour.toString() : hour.toString() );
-				ts += ( min  < 10 ? ":0" + min.toString() : ":" + min.toString() );
-				ts += ":00 UTC";
-				
-				data[i] = [ts, Math.random(), Math.random(), Math.random() ];
-				
-				min += 2;
-				if( min == 60 ) {
-					min = 0;
-					hour += 1;
-				}
-				
-				i++;
-				
-			}
-			
-			return data;
+			return generateRandomPrices();
 			
 		}
 		
 		public function getGldPldRatios() : Array {
 			
-			var data:Array = [];
-			var min:uint = 0;
-			var hour:uint = 0;
-			var i:uint = 0;
+			return generateRandomPrices();
 			
-			while( (hour < 24) || (min == 0) ) {
+		}
+		
+		protected function generateRandomPrices() : Array {
+			
+			var data:Array = [];
+			
+			for( var min:uint = 0; min < 60*24; min ++ ) {
 				
-				var ts:String = "05/03/2013 ";
-				ts += ( hour < 10 ? "0" + hour.toString() : hour.toString() );
-				ts += ( min  < 10 ? ":0" + min.toString() : ":" + min.toString() );
-				ts += ":00 UTC";
-				
-				data[i] = [ts, Math.random(), Math.random(), Math.random() ];
-				
-				min += 2;
-				if( min == 60 ) {
-					min = 0;
-					hour += 1;
-				}
-				
-				i++;
+				data[min] = {};
+				data[min][Constants.TIME] = min;
+				data[min][Constants.TODAY] = Math.random();
+				data[min][Constants.ONE_DAY_AGO] = Math.random();				
+				data[min][Constants.TWO_DAYS_AGO] = Math.random();			
 				
 			}
 			
-			return data;
+			return data;			
 			
 		}		
 		
@@ -159,80 +128,7 @@ package com.goldpricecafe.mobile
 			return _nextUpdate;
 			
 		}	
-		
-		public function parseZIP( zipFile:ZipFile ) : Object {
 			
-			var entry:ZipEntry = zipFile.entries[0];   
-			var rawData:ByteArray = zipFile.getInput(entry);
-			
-			return parseRawData(rawData);
-			
-		}
-		
-		public function parseRawData( rawData:ByteArray ) : Object {
-			
-			var strings:Array = rawData.toString().split("\n");
-			var weekend:String = strings.pop(); 
-			var lines:String = strings.pop();
-			var todayDate:Date = new Date();
-			
-			todayDate.setTime( Date.parse(strings.pop() ) );
-			strings.pop();
-			strings.pop();
-			
-			var data:Object = {};
-			var itr:uint = 0;
-			var type:String;
-			
-			for( var i:uint = 0; i<strings.length; i++ ) {
-				
-				var record:Array = (strings[i] as String).split(",");
-				
-				if( record.length == 1 ) { // Type: currency or ratio name
-					
-					type = record[0]; 
-					data[type] = [];
-					itr = 0;
-					
-				} else if (record.length == 4) { // Data
-					
-					data[type][itr] = [parseTime(record[0]), parsePrice(record[1]), parsePrice(record[2]), parsePrice(record[3])];
-					itr++;
-
-				} 
-			}
-			
-			return data;
-			
-		}
-		
-		public function parseTime( time:String ) : Date {
-			
-			if( (!time) || (time == "") ) return null;
-						
-			var parts:Array = time.split(":");	
-			if( parts.length != 2 ) {
-				return null;
-			}
-			
-			var hours:Number = parseInt( parts[0] );
-			if( isNaN(hours) ) return null;
-			var minutes:Number = parseInt( parts[1] );
-			if( isNaN(minutes) ) return null;	
-			
-			var date:Date = new Date();
-			date.setHours( hours, minutes, 0, 0 );
-			
-			return date;
-			
-		}
-		
-		public function parsePrice( price:String ) : Number {
-			
-			if( (!price) || (price=="") ) return Number.NaN;
-			return Number(price);
-			
-		}
 
 	}
 	
