@@ -94,6 +94,77 @@ package com.goldpricecafe.mobile
 			
 		}
 		
+		public static function setMainSerieColor(color:uint) : void {
+			
+			setStyle("#chartPanel",Chart.STYLE_SERIE_TODAY_COLOR, color);
+			
+		}
+		
+		public static function getMainSerieColor() : Number {
+			
+			return Number(getStyle("#chartPanel",Chart.STYLE_SERIE_TODAY_COLOR));
+			
+		}
+		
+		public static function setMainSerieWidth(width:uint) : void {
+			
+			setStyle("#chartPanel",Chart.STYLE_SERIE_TODAY_WIDTH, width);
+			
+		}
+		
+		public static function getMainSerieWidth() : Number {
+			
+			return Number(getStyle("#chartPanel",Chart.STYLE_SERIE_TODAY_WIDTH));
+			
+		}
+		
+		public static function setSerie2Color(color:uint) : void {
+			
+			setStyle("#chartPanel",Chart.STYLE_SERIE_1_DAY_AGO_COLOR, color);
+			
+		}
+		
+		public static function getSerie2Color() : Number {
+			
+			return Number(getStyle("#chartPanel",Chart.STYLE_SERIE_1_DAY_AGO_COLOR));
+			
+		}
+		
+		public static function setSerie2Width(width:uint) : void {
+			
+			setStyle("#chartPanel",Chart.STYLE_SERIE_1_DAY_AGO_WIDTH, width);
+			
+		}
+		
+		public static function getSerie2Width() : Number {
+			
+			return Number(getStyle("#chartPanel",Chart.STYLE_SERIE_1_DAY_AGO_WIDTH));
+			
+		}
+		
+		public static function setSerie3Color(color:uint) : void {
+			
+			setStyle("#chartPanel",Chart.STYLE_SERIE_2_DAYS_AGO_COLOR, color);
+			
+		}
+		
+		public static function getSerie3Color() : Number {
+			
+			return Number(getStyle("#chartPanel",Chart.STYLE_SERIE_2_DAYS_AGO_COLOR));
+			
+		}
+		
+		public static function setSerie3Width(width:uint) : void {
+			
+			setStyle("#chartPanel",Chart.STYLE_SERIE_2_DAYS_AGO_WIDTH, width);
+			
+		}
+		
+		public static function getSerie3Width() : Number {
+			
+			return Number(getStyle("#chartPanel",Chart.STYLE_SERIE_2_DAYS_AGO_WIDTH));
+			
+		}
 		//////////////////////////////////////////////////
 		
 		public static function setStyle( selector:String, style:String, value:Object ) : void {

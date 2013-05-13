@@ -6,5 +6,6 @@ package com.goldpricecafe.mobile
 	{	
 		function getData( currency:String ) : Object;	
 		function getNextUpdateTime() : Date;
+		function isWeekend() : Boolean;
 	}
 }

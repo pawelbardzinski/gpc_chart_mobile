@@ -328,23 +328,35 @@
 
 			protected function updateHeader() : void {
 				
-				var now:Date = new Date();
-				var sec:int = Math.round( (_nextUpdate.getTime() - now.getTime() )/1000 );
-				var min:int = sec/60;
-				sec = sec % 60;
-				
-				if( min == 0 && sec <= 0 ) {
+				if(_dataProvider.isWeekend()) {
 					
-					timeLabel.text = "waiting";
-					fader.end();
-					fader.play([timeLabel]);
+					//headerLabel.text = 'The Market is Closed. Latest Prices:';
+					timeLabel.visible = false;
 					
 				} else {
+				
+					headerLabel.text = 'Next Live Price Update';
+								
+					var now:Date = new Date();
+					var sec:int = Math.round( (_nextUpdate.getTime() - now.getTime() )/1000 );
+					var min:int = sec/60;
+					sec = sec % 60;
 					
-					fader.end();
-					timeLabel.alpha = 1.0;
-					timeLabel.text = ((min < 10) ? "0" + min.toString() : min.toString()) + ":" +
-									 ((sec < 10) ? "0" + sec.toString() : sec.toString());
+					if( min <= 0 && sec <= 0 ) {
+						
+						timeLabel.text = "waiting";
+						fader.end();
+						fader.play([timeLabel]);
+						
+					} else {
+						
+						fader.end();
+						timeLabel.alpha = 1.0;
+						timeLabel.text = ((min < 10) ? "0" + min.toString() : min.toString()) + ":" +
+										 ((sec < 10) ? "0" + sec.toString() : sec.toString());
+					}
+					timeLabel.visible = true;
+				
 				}
 				
 			}
@@ -411,7 +423,7 @@
 				totalWorth.text = buttonsCurrFormat.format( sum );
 				
 				/* Update chart if visible */
-				if(chartType == Constants.MY_STACK) {
+				if( (chartType == Constants.MY_STACK) && (_chartData) ) {
 					chartMyStack();
 					chartPanel.chart.dataProvider = _chartData[Constants.MY_STACK];
 				}
@@ -506,6 +518,8 @@
 				
 				currentState = "normal";
 				_nextUpdate = new Date();
+				
+				
 							
 				/*if(!CustomStyleManager.loadStyles()) {
 				CustomStyleManager.saveStyles();
@@ -552,8 +566,22 @@
 				_timer.addEventListener( TimerEvent.TIMER,timerHandler );
 				_timer.start();
 				
+				/* Stage orientation handler initialization */
+				this.addEventListener(Event.ADDED_TO_STAGE, function() : void  {
+					stage.addEventListener(StageOrientationEvent.ORIENTATION_CHANGE, orientationChangeHandler);
+				});
+				
 				updateHeader();
 				
+			}
+			
+			protected function orientationChangeHandler(event:StageOrientationEvent):void
+			{
+				if(stage.deviceOrientation == StageOrientation.UPSIDE_DOWN) {
+					stage.setOrientation( StageOrientation.DEFAULT );
+				} else {
+					stage.setOrientation( event.afterOrientation );
+				}
 			}
 			
 			protected function resizeHandler() : void {
@@ -649,7 +677,9 @@
 
 		<!-- Chart -->
 		
+		<s:Spacer height="10"/>
 		<gpc:Chart id="chartPanel" />
+		<s:Spacer height="5"/>
 		
 		<!-- Chart options group -->
 		
@@ -658,25 +688,25 @@
 			<s:HGroup id="chartDataBtnGroup" width="100%" verticalAlign="middle" gap="0">
 				
 				<!-- Chart data range buttons -->
-				<!--s:ButtonBar id="dataRangeBar" requireSelection="true" change="dataRange = dataRangeBar.selectedIndex" styleName="button fontSmall">
+				<!--s:ButtonBar id="dataRangeBar" requireSelection="true" change="dataRange = dataRangeBar.selectedIndex" styleName="button bigButton fontMedium">
 					<s:ArrayCollection source="['Last 3 Days','Today','History']"/>
 				</s:ButtonBar-->
-				<s:RadioButton label="Last 3 Days" group="{rangeRadioGroup}" value="{Constants.RANGE_3DAYS}" skinClass="com.goldpricecafe.mobile.skins.ButtonBarFirstButton" styleName="button fontSmall"/>
-				<s:RadioButton label="Today" group="{rangeRadioGroup}" value="{Constants.RANGE_1DAY}" skinClass="com.goldpricecafe.mobile.skins.ButtonBarMiddleButton" styleName="button fontSmall"/>
-				<s:RadioButton label="History" group="{rangeRadioGroup}" value="{Constants.RANGE_HISTORY}" skinClass="com.goldpricecafe.mobile.skins.ButtonBarLastButton" styleName="button fontSmall"/>
+				<s:RadioButton label="Last 3 Days" group="{rangeRadioGroup}" value="{Constants.RANGE_3DAYS}" skinClass="com.goldpricecafe.mobile.skins.ButtonBarFirstButton" styleName="button bigButton fontMedium"/>
+				<s:RadioButton label="Today" group="{rangeRadioGroup}" value="{Constants.RANGE_1DAY}" skinClass="com.goldpricecafe.mobile.skins.ButtonBarMiddleButton" styleName="button bigButton fontMedium"/>
+				<s:RadioButton label="History" group="{rangeRadioGroup}" value="{Constants.RANGE_HISTORY}" skinClass="com.goldpricecafe.mobile.skins.ButtonBarLastButton" styleName="button bigButton fontMedium"/>
 				
 				<s:Spacer width="7"/>
 				
 				<!-- Prices ratio buttons -->
-				<s:RadioButton id="gldslvratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_SLV_RATIO}" label="Gld/Slv Ratio" width="100%" styleName="button fontSmall" />				
+				<s:RadioButton id="gldslvratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_SLV_RATIO}" label="Gld/Slv Ratio" width="100%" styleName="button bigButton fontMedium" />				
 				
 				<s:Spacer width="7"/>
 				
-				<s:RadioButton id="gldpltratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_PLT_RATIO}" label="Gld/Plt Ratio" width="100%" styleName="button fontSmall" />
+				<s:RadioButton id="gldpltratioBtn" group="{chartTypeRadioGroup}" value="{Constants.GLD_PLT_RATIO}" label="Gld/Plt Ratio" width="100%" styleName="button bigButton fontMedium" />
 				
 				<s:Spacer width="7"/>
 				
-				<s:Button id="settingsBtn" label="Settings" width="100%" styleName="button fontSmall" click="currentState = 'settings'" />
+				<s:Button id="settingsBtn" label="Settings" width="100%" styleName="button bigButton fontMedium" click="currentState = 'settings'" />
 				
 			</s:HGroup>
 			
@@ -684,7 +714,7 @@
 		
 			<s:Spacer height="10"/>
 			
-			<s:Label id="trackYourStackLabel" text="Track Your Stack" styleName="myLabel fontSmall" />
+			<!--s:Label id="trackYourStackLabel" text="Track Your Stack" styleName="myLabel fontSmall" /-->
 			
 			<s:HGroup id="trackYourStackGroup" width="100%" verticalAlign="justify" >
 				

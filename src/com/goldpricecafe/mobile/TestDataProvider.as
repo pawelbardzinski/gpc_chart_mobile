@@ -79,7 +79,11 @@ package com.goldpricecafe.mobile
 			}
 			
 			return data;
-		}		
+		}
+		
+		public function isWeekend() : Boolean {
+			return false;
+		}
 		
 		public function getGoldPrices( currency:String ) : Array {
 			

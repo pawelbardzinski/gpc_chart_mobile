@@ -126,14 +126,19 @@ s|Application {
 }
 
 #chartPanel {
-	
-	serie1Color: #EEEE00;
-	serie2Color: #EEEE00;
-	serie3Color: #777700;	
-	serie1Width: 2;
-	serie2Width: 1;
-	serie3Width: 1;
+
+	serie2DaysAgoColor: #333300;
+	serie1DayAgoColor: #777700;
+	serieTodayColor: #FFFF00;	
+	serie2DaysAgoWidth: 3;
+	serie1DayAgoWidth: 3;
+	serieTodayWidth: 3;
 	gridColor: #999999;
+}
+
+mx|DataTip {
+
+	backgroundColor: #000000;
 }
 
 s|TextInput {
@@ -158,7 +163,7 @@ s|TextInput {
 /* Font sizes */
 
 .fontBig {
-	fontSize: 52;
+	fontSize: 50;
 }
 
 .fontMedium {

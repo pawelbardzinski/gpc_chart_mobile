@@ -43,7 +43,7 @@
 				synchronizeButtonColor();
 				synchronizeSelectedColor();
 				synchronizeBackgroundColor();
-				synchronizeSerie1Style();
+				synchronizeMainSerieStyle();
 				synchronizeSerie2Style();
 				synchronizeSerie3Style();
 				
@@ -89,30 +89,24 @@
 				
 			}
 				
-			protected function synchronizeSerie1Style() : void {
+			protected function synchronizeMainSerieStyle() : void {
 				
-				var val:Number  = Number( CustomStyleManager.getStyle("#chartPanel","serie1Color") );
-				serie1ColorCC.selectedColor = val;
-				
-				serie1WidthSpinner.selectedValue = Number( CustomStyleManager.getStyle("#chartPanel","serie1Width") );
+				serie1ColorCC.selectedColor = CustomStyleManager.getMainSerieColor();			
+				serie1WidthSpinner.selectedValue = CustomStyleManager.getMainSerieWidth();
 				
 			}
 				
 			protected function synchronizeSerie2Style() : void {
 				
-				var val:Number  = Number( CustomStyleManager.getStyle("#chartPanel","serie2Color") );
-				serie2ColorCC.selectedColor = val;
-				
-				serie2WidthSpinner.selectedValue = Number( CustomStyleManager.getStyle("#chartPanel","serie2Width") );
+				serie2ColorCC.selectedColor = CustomStyleManager.getSerie2Color();				
+				serie2WidthSpinner.selectedValue = CustomStyleManager.getSerie2Width();
 				
 			}
 				
 			protected function synchronizeSerie3Style() : void {
 				
-				var val:Number  = Number( CustomStyleManager.getStyle("#chartPanel","serie3Color") );
-				serie3ColorCC.selectedColor = val;
-				
-				serie3WidthSpinner.selectedValue = Number( CustomStyleManager.getStyle("#chartPanel","serie3Width") );
+				serie3ColorCC.selectedColor = CustomStyleManager.getSerie3Color();				
+				serie3WidthSpinner.selectedValue = CustomStyleManager.getSerie3Width();
 				
 			}				
 			
@@ -188,37 +182,37 @@
 			
 			protected function serie1ColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("#chartPanel","serie1Color",serie1ColorCC.selectedColor);
-				synchronizeSerie1Style();
+				CustomStyleManager.setMainSerieColor(serie1ColorCC.selectedColor);
+				synchronizeMainSerieStyle();
 			}
 			
 			protected function serie1WeightHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("#chartPanel","serie1Width",serie1WidthSpinner.selectedValue);
-				synchronizeSerie1Style();
+				CustomStyleManager.setMainSerieWidth(Number(serie1WidthSpinner.selectedValue));
+				synchronizeMainSerieStyle();
 			}			
 			
 			protected function serie2ColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("#chartPanel","serie2Color",serie2ColorCC.selectedColor);
+				CustomStyleManager.setSerie2Color(serie2ColorCC.selectedColor);
 				synchronizeSerie2Style();
 			}
 			
 			protected function serie2WeightHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("#chartPanel","serie2Width",serie2WidthSpinner.selectedValue);
+				CustomStyleManager.setSerie2Width(Number(serie2WidthSpinner.selectedValue));
 				synchronizeSerie2Style();
 			}			
 			
 			protected function serie3ColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("#chartPanel","serie3Color",serie3ColorCC.selectedColor);
+				CustomStyleManager.setSerie3Color(serie3ColorCC.selectedColor);
 				synchronizeSerie3Style();
 			}
 			
 			protected function serie3WeightHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle("#chartPanel","serie3Width",serie3WidthSpinner.selectedValue);
+				CustomStyleManager.setSerie3Width(Number(serie3WidthSpinner.selectedValue));
 				synchronizeSerie3Style();
 			}
 			

@@ -25,11 +25,7 @@ package com.goldpricecafe.mobile
 		
 		/* BlazeDS config */
 
-		private var _chanelId:String = "my-streaming-amf";
-		private var _chanelUri:String = "http://goldpricecafe.com:8400/alive5/messagebroker/streamingamf";
-		
-		
-		private var _channels:Array = [
+		private static const _channels:Array = [
 			new StreamingAMFChannel( "my-streaming-amf", "http://goldpricecafe.com:8400/alive5/messagebroker/streamingamf" ),
 			new AMFChannel("my-polling-amf", "http://goldpricecafe.com:8400/alive5/messagebroker/amfpolling"),
 			new AMFChannel("my-amf", "http://goldpricecafe.com:8400/alive5/messagebroker/amf")	
@@ -39,17 +35,20 @@ package com.goldpricecafe.mobile
 		
 		/* End BlazeDS config */
 		
-		private var _dataZipUrl:String = "http://goldpricecafe.com:8400/alive5/Alive6_HiRes/data.zip";
-		private var _timeUrl:String = "http://goldpricecafe.com:8400/alive5/Alive6_HiRes/time.txt";
+		private static const _dataUrl:String = "http://goldpricecafe.com:8400/alive5/Alive6_HiRes/data.zip";
+		private static const _historyUrl:String = "http://goldpricecafe.com:8400/alive5/Alive6_HiRes/hi.zip";
+		private static const _timeUrl:String = "http://goldpricecafe.com:8400/alive5/Alive6_HiRes/time.txt";
+		private static const _updatesPeriod:Number = 2 * 60 * 1000;
 		
 		private var _amfChannel:StreamingAMFChannel;
 		private var _channelSet:ChannelSet;
 		private var _consumer:Consumer;				
-		private var _nextUpdate:Date;
-		private var _updatesPeriod:Number = 2 * 60 * 1000;
+		private var _nextUpdate:Date;		
 		private var _data:Object;
+		private var _history:Object;
 		private var _weekend:Boolean = false;
 		private var _dataLoader:URLLoader;
+		private var _historyLoader:URLLoader;
 		private var _timeLoader:URLLoader;
 		private var _dataLoaded:Boolean = false;
 		private var _timeLoaded:Boolean = false;
@@ -57,7 +56,8 @@ package com.goldpricecafe.mobile
 		
 		public function BlazeDataProvider()
 		{		
-			loadZipFile();			
+			loadData();	
+			loadHistory();
 			initConsumer();
 		}
 		
@@ -104,9 +104,14 @@ package com.goldpricecafe.mobile
 			return data;
 		}			
 		
-		public function getNextUpdateTime():Date
-		{
+		public function getNextUpdateTime():Date {
+			
 			return _nextUpdate;
+		}
+		
+		public function isWeekend() : Boolean {
+			
+			return _weekend;
 		}
 		
 		protected function initConsumer() : void {
@@ -126,19 +131,38 @@ package com.goldpricecafe.mobile
 			
 		}
 		
-		protected function loadZipFile() : void {
+		protected function loadData() : void {
 		
 			try {
 				
 				if( !_dataLoader ) {
 					_dataLoader = new URLLoader();
-					_dataLoader.addEventListener(Event.COMPLETE, zipLoaderHandler);	
+					_dataLoader.addEventListener(Event.COMPLETE, dataLoaderHandler);	
 					_dataLoader.dataFormat = URLLoaderDataFormat.BINARY;	
 				}
-				_dataLoader.load( new URLRequest(_dataZipUrl) );
+				_dataLoader.load( new URLRequest(_dataUrl) );
 				
 			} catch( e:Error ) {
 							
+				trace( e.message );
+				
+			}				
+			
+		}
+		
+		protected function loadHistory() : void {
+			
+			try {
+				
+				if( !_historyLoader ) {
+					_historyLoader = new URLLoader();
+					_historyLoader.addEventListener(Event.COMPLETE, historyLoaderHandler);	
+					_historyLoader.dataFormat = URLLoaderDataFormat.BINARY;	
+				}
+				_historyLoader.load( new URLRequest(_historyUrl) );
+				
+			} catch( e:Error ) {
+				
 				trace( e.message );
 				
 			}				
@@ -164,11 +188,17 @@ package com.goldpricecafe.mobile
 			
 		}		
 		
-		protected function zipLoaderHandler( e:Event ) : void {
+		protected function dataLoaderHandler( e:Event ) : void {
 			
-			_data = parseZIP( new ZipFile( e.target.data ) );		
+			_data = parseDataZIP( new ZipFile( e.target.data ) );		
 			loadTime();
 			
+		}
+		
+		protected function historyLoaderHandler( e:Event ) : void {
+			
+			_history = parseHistoryZIP( new ZipFile( e.target.data ) );
+						
 		}
 		
 		protected function timeLoaderHandler( e:Event ) : void {
@@ -240,26 +270,34 @@ package com.goldpricecafe.mobile
 			
 		}
 		
-		public function parseZIP( zipFile:ZipFile ) : Object {
+		public function parseDataZIP( zipFile:ZipFile ) : Object {
 			
 			var entry:ZipEntry = zipFile.entries[0];   
-			var rawData:ByteArray = zipFile.getInput(entry);
-			
-			return parseRawData(rawData);
-			
-		}
-		
-		public function parseRawData( rawData:ByteArray ) : Object {
-			
+			var rawData:ByteArray = zipFile.getInput(entry);	
 			var strings:Array = rawData.toString().split("\n");
 			
 			_weekend = (strings.pop() == "weekend"); 
 			var lines:String = strings.pop();
-			var todayDate:Date = new Date();
-			
+			var todayDate:Date = new Date();	
 			todayDate.setTime( Date.parse(strings.pop() ) );
 			strings.pop();
-			strings.pop();
+			strings.pop();			
+			
+			return parseStringArray(strings);
+			
+		}
+		
+		public function parseHistoryZIP( zipFile:ZipFile ) : Object {
+			
+			var entry:ZipEntry = zipFile.entries[0];   
+			var rawData:ByteArray = zipFile.getInput(entry);	
+			var strings:Array = rawData.toString().split("\n");			
+			
+			return parseStringArray(strings);
+			
+		}
+		
+		public function parseStringArray( strings:Array ) : Object {			
 			
 			var data:Object = {};
 			var itr:uint = 0;

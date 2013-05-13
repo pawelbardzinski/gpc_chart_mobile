@@ -6,10 +6,10 @@ package
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
-	
 	import mx.events.FlexEvent;
 	import mx.preloaders.DownloadProgressBar;
 	
+	[Style(name="radius", inherit="no", type="int")]
 	public class SlicedCirclePreloader extends DownloadProgressBar 
 	{
 	    private var bgSprite:SlicedCircle;
@@ -20,8 +20,8 @@ package
 	    * Change the number of slices, radius and color here
 	    */
 	    private var slices:int=30;
-	    private var radius:int=70;
-	    private var sliceColor:uint=0xfcff00;
+	    private var radius:int=150;
+	    private var sliceColor:uint=0xffff00;
 	    
 	    /**
 	    * Change the text font,color, size here
@@ -33,6 +33,7 @@ package
 		public function SlicedCirclePreloader():void
 		{
 			super(); 
+			
 			bgSprite= new SlicedCircle(slices,radius,sliceColor);
 			txtBox.text="0%";
 			txtFormat.font=txtFont;
@@ -47,6 +48,9 @@ package
 		}
 		
 		public function centerPreloader():void {
+			
+			if(!stage) return;
+			
 			var centerX:Number=(this.stage.stageWidth) / 2;
             var centerY:Number=(this.stage.stageHeight) / 2;
             if(bgSprite!=null) {
