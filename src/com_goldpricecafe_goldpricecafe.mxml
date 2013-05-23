@@ -8,13 +8,13 @@
 		@namespace s "library://ns.adobe.com/flex/spark";
 		@namespace mx "library://ns.adobe.com/flex/mx";
 		@font-face {
-			src: url("Michroma.ttf");
+			src: url("assets/Michroma.ttf");
 			fontFamily: nextUpdate;
 			fontWeight: normal;	
 			embedAsCFF: false; 
 		}
 		@font-face {
-			src: url("Michroma.ttf");
+			src: url("assets/Michroma.ttf");
 			fontFamily: nextUpdate2;
 			fontWeight: normal;	
 		}
@@ -43,12 +43,7 @@
 		{
 			color: Yellow;
 		}
-		.customVertScroll
-		{
-			trackColors: Yellow, Yellow;
-			upArrowSkin: Embed("top-arrow.jpg");
-			downArrowSkin: Embed("down-arrow.jpg");
-		}
+
 		.customButton
 		{
 			embedFonts: true;

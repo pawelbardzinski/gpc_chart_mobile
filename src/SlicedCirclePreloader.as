@@ -27,7 +27,7 @@ package
 	    * Change the text font,color, size here
 	    */
 	    private var txtFont:String="Arial";
-	    private var txtFontSize:String="16";
+	    private var txtFontSize:String="48";
 	    private var txtFontColor:uint=0xeaed00;
 	    
 		public function SlicedCirclePreloader():void

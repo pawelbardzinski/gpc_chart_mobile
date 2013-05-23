@@ -2,15 +2,21 @@
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		 xmlns:s="library://ns.adobe.com/flex/spark"
 		 xmlns:gpc="com.goldpricecafe.mobile.*"
+		 xmlns:yahoo="http://www.yahoo.com/astra/2006/mxml"
 		 width="100%" height="100%"
 		 creationComplete="creationCompleteHandler(event)" xmlns:mx="library://ns.adobe.com/flex/mx">
 	
 	<s:layout>
 		<s:HorizontalLayout/>
 	</s:layout>
+	
+	<fx:Declarations>
+		
+	</fx:Declarations>
+	
 	<fx:Script>
 		<![CDATA[
-
+			import mx.collections.ArrayList;
 			import mx.events.FlexEvent;			
 			
 			//////////////////////////////////////////////////////
@@ -19,8 +25,23 @@
 			//													//
 			//////////////////////////////////////////////////////	
 			
-			public static const FONTS:Array = ["michroma","mate","codystar","londrina"]
+			public static const FONTS:Array = ["arial","mate","michroma","tahoma"];
+			public static const PRESETS:Array = ["default","test"];	
+			public static const FONT_SIZES:Array = fontSizes();
+			public static const GLOSSINESS:Array = glossiness();
 			
+			private static function glossiness() : Array {
+				var gloss:Array = [];
+				for( var i:int = 0; i <= 100; i++ ) gloss.push(i);
+				return gloss;
+			}
+			
+			private static function fontSizes() : Array {
+				var sizes:Array = [];
+				for( var i:int = 8; i <= 100; i++ ) sizes.push(i);
+				return sizes;
+			}			
+				
 			public function reset() : void {
 				
 				CustomStyleManager.resetStyles();
@@ -38,28 +59,40 @@
 			
 			protected function synchronize() : void {
 				
-				synchronizeFontColor();
+				synchronizeMainFont();
+				synchronizeChartFont();
 				synchronizeBorderColor();
 				synchronizeButtonColor();
-				synchronizeSelectedColor();
+				synchronizeSelectedFontColor();
+				synchronizeSelectedBorderColor();
+				synchronizeSelectedChromeColor();
 				synchronizeBackgroundColor();
+				synchronizeChartBackgroundStyle();
+				synchronizeHGridStyle();	
+				synchronizeVGridStyle();
 				synchronizeMainSerieStyle();
 				synchronizeSerie2Style();
 				synchronizeSerie3Style();
 				
 			}
 			
-			protected function synchronizeFontColor() : void {
+			protected function synchronizeMainFont() : void {
 				
 				fontColorCC.selectedColor = CustomStyleManager.getFontColor();
+				fontFamilySpinner.selectedValue = CustomStyleManager.getFontFamily().toLowerCase();
+				fontSizeSpinner.selectedValue = CustomStyleManager.getFontSize();
 				
+			}
+
+			
+			protected function synchronizeChartFont() : void {
+				
+				chartFontColorCC.selectedColor = CustomStyleManager.getChartFontColor();
+				chartFontFamilySpinner.selectedValue = CustomStyleManager.getChartFontFamily().toLowerCase();
+				chartFontSizeSpinner.selectedValue = CustomStyleManager.getChartFontSize();
+								
 			}
 			
-			protected function synchronizeFontFamily() : void {
-				
-				fontFamilySpinner.selectedValue = CustomStyleManager.getFontFamily().toLowerCase();
-				
-			}
 			
 			protected function synchronizeBorderColor() : void {			
 				
@@ -73,21 +106,54 @@
 				
 			}
 
-			protected function synchronizeSelectedColor() : void {
+			protected function synchronizeSelectedFontColor() : void {
 				
-				var val:Number  = Number( CustomStyleManager.getStyle(".selected","chromeColor") );
-				highlightColorCC.selectedColor = val;
-				
-				val = Number( CustomStyleManager.getStyle(".selected","borderColor") );
-				highlightBorderCC.selectedColor = val;				
+				selectedFontColorCC.selectedColor = CustomStyleManager.getSelectedFontColor();				
 				
 			}
+			
+			protected function synchronizeSelectedBorderColor() : void {
+				
+				selectedBorderColorCC.selectedColor = CustomStyleManager.getSelectedBorderColor();				
+				
+			}
+			
+			protected function synchronizeSelectedChromeColor() : void {
+				
+				selectedChromeColorCC.selectedColor = CustomStyleManager.getSelectedChromeColor();				
+				
+			}			
 						
 			protected function synchronizeBackgroundColor() : void {
 				
 				backgroundColorCC.selectedColor = CustomStyleManager.getBackgroundColor();	
 				
 			}
+			
+			/* Grid */
+			
+			protected function synchronizeChartBackgroundStyle() : void 
+			{
+				
+			}
+			
+			protected function synchronizeHGridStyle() : void 
+			{				
+				hGridColorCC.selectedColor = CustomStyleManager.getHGridStrokeColor();
+				hGridAlphaInput.numericValue = CustomStyleManager.getHGridStrokeAlpha();
+				hGridFillColorCC.selectedColor = CustomStyleManager.getHGridFillColor();
+				hGridFillAlphaInput.numericValue = CustomStyleManager.getHGridFillAlpha();
+			}
+
+			protected function synchronizeVGridStyle() : void 
+			{				
+				vGridColorCC.selectedColor = CustomStyleManager.getVGridStrokeColor();
+				vGridAlphaInput.numericValue = CustomStyleManager.getVGridStrokeAlpha();
+				vGridFillColorCC.selectedColor = CustomStyleManager.getVGridFillColor();
+				vGridFillAlphaInput.numericValue = CustomStyleManager.getVGridFillAlpha();
+			}
+			
+			/* Series */
 				
 			protected function synchronizeMainSerieStyle() : void {
 				
@@ -139,18 +205,46 @@
 				
 				synchronize();
 				
-			}			
+			}
+			
+			protected function presetHandler(event:Event):void 
+			{
+				CustomStyleManager.loadPreset( String(presetSpinner.selectedItem) );
+				synchronize();
+			}
 			
 			protected function fontColorHandler(event:Event):void
 			{				
 				CustomStyleManager.setFontColor( fontColorCC.selectedColor );
-				synchronizeFontColor();
+				synchronizeMainFont();
 			}
 			protected function fontFamilyHandler(event:Event):void
 			{				
 				CustomStyleManager.setFontFamily( String(fontFamilySpinner.selectedValue) );
-				synchronizeFontFamily();
+				synchronizeMainFont();
+			}
+			protected function fontSizeHandler(event:Event):void
+			{				
+				CustomStyleManager.setFontSize( Number(fontSizeSpinner.selectedValue) );
+				synchronizeMainFont();
+			}
+			
+			protected function chartFontColorHandler(event:Event):void
+			{				
+				CustomStyleManager.setChartFontColor( chartFontColorCC.selectedColor );
+				synchronizeChartFont();
+			}
+			protected function chartFontFamilyHandler(event:Event):void
+			{				
+				CustomStyleManager.setChartFontFamily( String(chartFontFamilySpinner.selectedValue) );
+				synchronizeChartFont();
+			}
+			protected function chartFontSizeHandler(event:Event):void
+			{				
+				CustomStyleManager.setChartFontSize( Number(chartFontSizeSpinner.selectedValue) );
+				synchronizeChartFont();
 			}			
+			
 			protected function borderColorHandler(event:Event):void
 			{
 				CustomStyleManager.setBorderColor(borderColorCC.selectedColor);
@@ -168,17 +262,77 @@
 				synchronizeBackgroundColor();
 			}
 			
-			protected function highlightColorHandler(event:Event):void
+			protected function selectedFontColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle(".selected","chromeColor",highlightColorCC.selectedColor);
-				synchronizeSelectedColor();
+				CustomStyleManager.setSelectedFontColor(selectedFontColorCC.selectedColor);
+				synchronizeSelectedFontColor();
 			}
 			
-			protected function highlightBorderHandler(event:Event):void
+			protected function selectedBorderColorHandler(event:Event):void
 			{
-				CustomStyleManager.setStyle(".selected","borderColor",highlightBorderCC.selectedColor);
-				synchronizeSelectedColor();
+				CustomStyleManager.setSelectedBorderColor(selectedBorderColorCC.selectedColor);
+				synchronizeSelectedBorderColor();
+			}
+			
+			protected function selectedChromeColorHandler(event:Event):void
+			{
+				CustomStyleManager.setSelectedChromeColor(selectedChromeColorCC.selectedColor);
+				synchronizeSelectedChromeColor();
 			}			
+			
+			/* Grid */
+			
+			protected function hGridColorHandler(event:Event) : void 
+			{
+				CustomStyleManager.setHGridStrokeColor(hGridColorCC.selectedColor);
+				synchronizeHGridStyle();				
+			}
+			
+			protected function hGridAlphaHandler(event:Event) : void 
+			{
+				CustomStyleManager.setHGridStrokeAlpha(hGridAlphaInput.numericValue);
+				synchronizeHGridStyle();				
+			}
+			
+			protected function hGridFillColorHandler(event:Event) : void 
+			{
+				CustomStyleManager.setHGridFillColor(hGridFillColorCC.selectedColor);
+				synchronizeHGridStyle();				
+			}
+			
+			protected function hGridFillAlphaHandler(event:Event) : void 
+			{
+				CustomStyleManager.setHGridFillAlpha(Number(hGridFillAlphaInput.text));
+				synchronizeHGridStyle();				
+			}
+			
+				/* vertical */
+			
+			protected function vGridColorHandler(event:Event) : void 
+			{
+				CustomStyleManager.setVGridStrokeColor(vGridColorCC.selectedColor);
+				synchronizeVGridStyle();				
+			}
+			
+			protected function vGridAlphaHandler(event:Event) : void 
+			{
+				CustomStyleManager.setVGridStrokeAlpha(vGridAlphaInput.numericValue);
+				synchronizeVGridStyle();				
+			}
+			
+			protected function vGridFillColorHandler(event:Event) : void 
+			{
+				CustomStyleManager.setVGridFillColor(vGridFillColorCC.selectedColor);
+				synchronizeVGridStyle();				
+			}
+			
+			protected function vGridFillAlphaHandler(event:Event) : void 
+			{
+				CustomStyleManager.setVGridFillAlpha(vGridFillAlphaInput.numericValue);
+				synchronizeVGridStyle();				
+			}
+			
+			/* Series */
 			
 			protected function serie1ColorHandler(event:Event):void
 			{
@@ -223,9 +377,15 @@
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
 	
+	<!-- Labels -->
+	
 	<s:VGroup id="settingsLabelsGroup" height="100%">
 		<s:Spacer height="100%"/>
-		<s:Label text="Fonts" styleName="myLabel fontMedium"/>
+		<s:Label text="Preset" styleName="myLabel fontMedium"/>
+		<s:Spacer height="200%"/>
+		<s:Label text="Main font" styleName="myLabel fontMedium"/>
+		<s:Spacer height="200%"/>
+		<s:Label text="Chart font" styleName="myLabel fontMedium"/>
 		<s:Spacer height="200%"/>
 		<s:Label text="Borders" styleName="myLabel fontMedium"/>
 		<s:Spacer height="200%"/>
@@ -237,44 +397,123 @@
 		<s:Spacer height="200%"/>
 		<s:Label text="Selected border" styleName="myLabel fontMedium"/>
 		<s:Spacer height="200%"/>
-		<s:Label text="Serie 1" styleName="myLabel fontMedium"/>
+		<s:Label text="Selected background" styleName="myLabel fontMedium"/>
+		
+		<!-- Grid -->
+		
 		<s:Spacer height="200%"/>
-		<s:Label text="Serie 2" styleName="myLabel fontMedium"/>
+		<s:Label text="Horizontal grid" styleName="myLabel fontMedium"/>
 		<s:Spacer height="200%"/>
-		<s:Label text="Serie 3" styleName="myLabel fontMedium"/>
-		<s:Spacer height="100%"/>		
+		<s:Label text="Vertical grid" styleName="myLabel fontMedium"/>
+		
+		<!-- Series -->
+		
+		<s:Spacer height="200%"/>
+		<s:Label text="Today" styleName="myLabel fontMedium"/>
+		<s:Spacer height="200%"/>
+		<s:Label text="Yesterday" styleName="myLabel fontMedium"/>
+		<s:Spacer height="200%"/>
+		<s:Label text="Two days ago" styleName="myLabel fontMedium"/>
+		<s:Spacer height="100%"/>
+		
 	</s:VGroup>
 	<s:Spacer width="10" />
+	
+	<!-- Controls -->
+	
 	<s:VGroup id="settingsValuesGroup" height="100%" width="100%" styleName="fontSmall">
+		
+		<gpc:CustomDropDownList id="presetSpinner" 
+								width="100%" height="100%"
+								dataProvider="{new ArrayList(PRESETS)}" 
+								styleName="myDropDown fontMedium"
+								openButtonStyle="button bigButton"
+								change="presetHandler(event)" 
+								interactionMode="touch" 
+								touchDelay="200"/>
+		
 		<s:HGroup width="100%" height="100%">
-			<mx:ColorPicker id="fontColorCC" width="70%" height="100%" change="fontColorHandler(event)"/>
-			<gpc:HSpinner id="fontFamilySpinner" width="40%" height="100%" change="fontFamilyHandler(event)">
+			<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   id="fontColorCC" width="70%" height="100%" change="fontColorHandler(event)"/>
+			<gpc:HSpinner id="fontSizeSpinner" width="100%" height="100%" change="fontSizeHandler(event)">
+				<s:ArrayCollection source="{FONT_SIZES}"/>
+			</gpc:HSpinner>			
+			<gpc:HSpinner id="fontFamilySpinner" width="100%" height="100%" change="fontFamilyHandler(event)">
 				<s:ArrayCollection source="{FONTS}"/>
 			</gpc:HSpinner>
 		</s:HGroup>	
-		<mx:ColorPicker id="borderColorCC" width="100%" height="100%" change="borderColorHandler(event)"/>
-		<mx:ColorPicker id="backgroundColorCC" width="100%" height="100%" change="backgroundColorHandler(event)"/>
-		<mx:ColorPicker id="buttonColorCC" width="100%" height="100%" change="buttonColorHandler(event)"/>	
-		<mx:ColorPicker id="highlightColorCC" width="100%" height="100%" change="highlightColorHandler(event)"/>
-		<mx:ColorPicker id="highlightBorderCC" width="100%" height="100%" change="highlightBorderHandler(event)"/>	
 		<s:HGroup width="100%" height="100%">
-			<mx:ColorPicker id="serie1ColorCC" width="70%" height="100%" change="serie1ColorHandler(event)"/>
+			<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   id="chartFontColorCC" width="70%" height="100%" change="chartFontColorHandler(event)"/>
+			<gpc:HSpinner id="chartFontSizeSpinner" width="100%" height="100%" change="chartFontSizeHandler(event)">
+				<s:ArrayCollection source="{FONT_SIZES}"/>
+			</gpc:HSpinner>			
+			<gpc:HSpinner id="chartFontFamilySpinner" width="100%" height="100%" change="chartFontFamilyHandler(event)">
+				<s:ArrayCollection source="{FONTS}"/>
+			</gpc:HSpinner>
+		</s:HGroup>
+		<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+								   id="borderColorCC" width="100%" height="100%" change="borderColorHandler(event)"/>
+		<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+								   id="backgroundColorCC" width="100%" height="100%" change="backgroundColorHandler(event)"/>
+		<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+								   id="buttonColorCC" width="100%" height="100%" change="buttonColorHandler(event)"/>	
+		<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+								   id="selectedFontColorCC" width="100%" height="100%" change="selectedFontColorHandler(event)"/>
+		<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+								   id="selectedBorderColorCC" width="100%" height="100%" change="selectedBorderColorHandler(event)"/>	
+		<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+								   pickerStyleName="colorPicker"
+								   id="selectedChromeColorCC" width="100%" height="100%" change="selectedChromeColorHandler(event)" />
+		
+		<!-- Grid -->
+		
+		<s:HGroup width="100%" height="100%" verticalAlign="middle">
+			<s:Label text="stroke" styleName="myLabel fontSmall"/>
+			<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown" 
+									   id="hGridColorCC" width="100%" height="100%" change="hGridColorHandler(event)"/>
+			<gpc:NumberInput id="hGridAlphaInput" width="100%" height="100%" focusOut="hGridAlphaHandler(event)"/>
+			<s:Label text="fill" styleName="myLabel fontSmall"/>
+			<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   id="hGridFillColorCC" width="100%" height="100%" change="hGridFillColorHandler(event)"/>
+			<gpc:NumberInput id="hGridFillAlphaInput" width="100%" height="100%" focusOut="hGridFillAlphaHandler(event)" minimum="0" maximum="1" />			
+		</s:HGroup>	
+		
+		<s:HGroup width="100%" height="100%" verticalAlign="middle">
+			<s:Label text="stroke" styleName="myLabel fontSmall"/>
+			<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   id="vGridColorCC" width="100%" height="100%" change="vGridColorHandler(event)"/>
+			<gpc:NumberInput id="vGridAlphaInput" width="100%" height="100%" focusOut="vGridAlphaHandler(event)"/>
+			<s:Label text="fill" styleName="myLabel fontSmall"/>
+			<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   id="vGridFillColorCC" width="100%" height="100%" change="vGridFillColorHandler(event)"/>
+			<gpc:NumberInput id="vGridFillAlphaInput" width="100%" height="100%" focusOut="vGridFillAlphaHandler(event)" minimum="0" maximum="1" />			
+		</s:HGroup>	
+		
+		<!-- Series -->
+		<s:HGroup width="100%" height="100%">
+			<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   id="serie1ColorCC" width="70%" height="100%" change="serie1ColorHandler(event)"/>
 			<gpc:HSpinner id="serie1WidthSpinner" width="40%" height="100%" change="serie1WeightHandler(event)">
 				<s:ArrayCollection source="{LINE_WIGHTS}"/>
 			</gpc:HSpinner>
 		</s:HGroup>		
 		<s:HGroup width="100%" height="100%">
-			<mx:ColorPicker id="serie2ColorCC" width="70%" height="100%" change="serie2ColorHandler(event)"/>
+			<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   id="serie2ColorCC" width="70%" height="100%" change="serie2ColorHandler(event)"/>
 			<gpc:HSpinner id="serie2WidthSpinner" width="40%" height="100%" change="serie2WeightHandler(event)">
 				<s:ArrayCollection source="{LINE_WIGHTS}"/>
 			</gpc:HSpinner>
 		</s:HGroup>
 		<s:HGroup width="100%" height="100%">
-			<mx:ColorPicker id="serie3ColorCC" width="70%" height="100%" change="serie3ColorHandler(event)"/>
+			<yahoo:DropDownColorPicker pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   id="serie3ColorCC" width="70%" height="100%" change="serie3ColorHandler(event)"/>
 			<gpc:HSpinner id="serie3WidthSpinner" width="40%" height="100%" change="serie3WeightHandler(event)">
 				<s:ArrayCollection source="{LINE_WIGHTS}"/>
 			</gpc:HSpinner>
 		</s:HGroup>		
 	</s:VGroup>	
+	
+
 	
 </s:Group>

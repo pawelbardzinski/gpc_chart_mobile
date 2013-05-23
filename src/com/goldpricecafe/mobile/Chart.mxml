@@ -4,8 +4,7 @@
 		 xmlns:mx="library://ns.adobe.com/flex/mx"
 		 initialize="init()"
 		 creationComplete="creationCompleteHandler(event)"		 
-		 gestureZoom="zoomGestureHandler(event)"
-		 gesturePan="panGestureHandler(event)" >
+		 gestureZoom="zoomGestureHandler(event)">
 	
 	<s:layout>
 		<s:VerticalLayout gap="0"/>
@@ -13,13 +12,22 @@
 	
 	<fx:Metadata>
 		[Style(name="axisColor",type="Number",format="Color",inherit="yes")]
-		[Style(name="gridColor",type="Number",format="Color",inherit="yes")]		
+		[Style(name="chartBackgroundColor",type="Number",format="Color",inherit="yes")]		
+		[Style(name="chartBackgroundAlpha",type="Number",inherit="yes")]			
+		[Style(name="vGridStrokeColor",type="Number",format="Color",inherit="yes")]	
+		[Style(name="vGridStrokeAlpha",type="Number",format="Color",inherit="yes")]
+		[Style(name="hGridStrokeColor",type="Number",format="Color",inherit="yes")]
+		[Style(name="hGridStrokeAlpha",type="Number",format="Color",inherit="yes")]
+		[Style(name="vGridFillColor",type="Number",format="Color",inherit="yes")]
+		[Style(name="vGridFillAlpha",type="Number",format="Color",inherit="yes")]		
+		[Style(name="hGridFillColor",type="Number",format="Color",inherit="yes")]	
+		[Style(name="hGridFillAlpha",type="Number",format="Color",inherit="yes")]		
 		[Style(name="serieTodayColor",type="Number",format="Color",inherit="yes")]
 		[Style(name="serie1DayAgoColor",type="Number",format="Color",inherit="yes")]
 		[Style(name="serie2DaysAgoColor",type="Number",format="Color",inherit="yes")]
 		[Style(name="serieTodayWidth",type="Number",inherit="yes")]
 		[Style(name="serie1DayAgoWidth",type="Number",inherit="yes")]
-		[Style(name="serie2DaysAgoWidth",type="Number",inherit="yes")]		
+		[Style(name="serie2DaysAgoWidth",type="Number",inherit="yes")]	
 	</fx:Metadata>
 	
 	<!--
@@ -44,19 +52,33 @@
 							  precision="2" 
 							  thousandsSeparatorTo="," 
 							  useThousandsSeparator="true" 
-							  useNegativeSign="false" />		
+							  useNegativeSign="false" />	
+		<s:DateTimeFormatter id="timeFormat" dateStyle="none" timeStyle="short"/>
+		<s:DateTimeFormatter id="dateFormat" dateStyle="short" timeStyle="none"/>		
 		
 	</fx:Declarations>
 	
 	<fx:Script>
 		<![CDATA[
 			
+			import com.goldpricecafe.mobile.CustomDataTip;		
+			import mx.charts.HitData;
 			import mx.charts.chartClasses.IAxis;
 			import mx.charts.chartClasses.Series;
 			import mx.events.FlexEvent;
+			import mx.events.SandboxMouseEvent;
 			
 			public static const STYLE_AXIS_COLOR:String ="axisColor";
-			public static const STYLE_GRID_COLOR:String ="gridColor";
+			public static const STYLE_CHART_BACKGROUND_COLOR:String ="chartBackgroundColor";
+			public static const STYLE_CHART_BACKGROUND_ALPHA:String ="chartBackgroundAlpha";				
+			public static const STYLE_V_GRID_STROKE_COLOR:String ="vGridStrokeColor";
+			public static const STYLE_V_GRID_STROKE_ALPHA:String ="vGridStrokeAlpha";			
+			public static const STYLE_H_GRID_STROKE_COLOR:String ="hGridStrokeColor";	
+			public static const STYLE_H_GRID_STROKE_ALPHA:String ="hGridStrokeAlpha";			
+			public static const STYLE_V_GRID_FILL_COLOR:String ="vGridFillColor";
+			public static const STYLE_V_GRID_FILL_ALPHA:String ="vGridFillAlpha";			
+			public static const STYLE_H_GRID_FILL_COLOR:String ="hGridFillColor";	
+			public static const STYLE_H_GRID_FILL_ALPHA:String ="hGridFillAlpha";			
 			public static const STYLE_SERIE_TODAY_COLOR:String = "serieTodayColor";
 			public static const STYLE_SERIE_1_DAY_AGO_COLOR:String = "serie1DayAgoColor";
 			public static const STYLE_SERIE_2_DAYS_AGO_COLOR:String = "serie2DaysAgoColor";
@@ -64,7 +86,8 @@
 			public static const STYLE_SERIE_1_DAY_AGO_WIDTH:String = "serie1DayAgoWidth";
 			public static const STYLE_SERIE_2_DAYS_AGO_WIDTH:String = "serie2DaysAgoWidth";
 			
-			public static var _zoomSpeed:Number = 0.25;
+			public static const _zoomSpeed:Number = 1;
+			public static const _maxZoom:Number = 10 * 60 * 1000;
 			
 			//////////////////////////////////////////////////////
 			//                                     				//
@@ -80,8 +103,10 @@
 			public function set chartType( type:String ) : void {
 				
 				_chartType = type;				
-				updateChartTitle();
-				forceRedraw();
+				
+				_updateChartTitleNeeded = true;	
+				_updateVBoundsNeeded = true;	
+				invalidateDisplayList();
 				
 			}	
 			public function get chartType() : String {
@@ -97,37 +122,66 @@
 			public function set weightUnits( units:String ) : void {
 				
 				_weightUnits = units;			
-				updateChartTitle();
-				forceRedraw();
-	
 				
+				/* Scale chart */
+				switch(_chartType) {
+					
+					case Constants.GLD_PLD_RATIO:
+					case Constants.GLD_PLT_RATIO:
+					case Constants.GLD_SLV_RATIO:
+					case Constants.MY_STACK:
+						
+						_scale = 1;
+						break;
+					
+					default:
+						
+						_scale = _weightUnits == Constants.UNITS_GR ? Constants.GROZ_RATIO : 1;
+				}				
+				
+				_updateChartTitleNeeded = true;	
+				_updateVBoundsNeeded = true;	
+				invalidateDisplayList();
+	
 			}	
 			public function get weightUnits() : String {
 				
 				return _weightUnits;
 			}			
-			
-			/**
-			 * Weight units. Use following constants from com.goldpricecafe.mobile.Constants:
-			 * RANGE_3DAYS, RANGE_1DAY, RANGE_HISTORY
-			 */			
+						
 			[Bindable]
 			public function set dataRange( range:uint ) : void {
 				
-				_dataRange = range;
-				updateChartTitle();
+				/* Switch series on/off  */
 				
 				switch( range ) {
-					case Constants.RANGE_1DAY:
+					
+					case Constants.RANGE_1DAY:					
 						serie1DayAgo.visible = serie2DaysAgo.visible = false;
+						serieMain.visible = true;
+						serieMain.dataProvider = serie1DayAgo.dataProvider;
 						break;
 					case Constants.RANGE_3DAYS:
-						serie1DayAgo.visible = serie2DaysAgo.visible = true;
+						serieMain.visible = serie1DayAgo.visible = serie2DaysAgo.visible = true;
+						serieMain.dataProvider = serie1DayAgo.dataProvider;
 						break;	
 					case Constants.RANGE_HISTORY:
 						serie1DayAgo.visible = serie2DaysAgo.visible = false;
-						break;					
-				}				
+						serieMain.visible = true;	
+						serieMain.dataProvider = _history;
+						break;
+					
+				}
+				
+				/* Restore data window bounds */
+				horizontalAxis.minimum = _horizontalStart[range];
+				horizontalAxis.maximum = _horizontalEnd[range];					
+					
+				_dataRange = range;
+				
+				_updateChartTitleNeeded = true;	
+				_updateVBoundsNeeded = true;	
+				invalidateDisplayList();				
 				
 			}
 			public function get dataRange() : uint {
@@ -142,7 +196,10 @@
 			public function set currency( currency:String ) : void {
 				
 				_currency = currency;			
-				updateChartTitle();
+				
+				_updateChartTitleNeeded = true;	
+				_updateVBoundsNeeded = true;	
+				invalidateDisplayList();
 
 				
 			}	
@@ -153,22 +210,7 @@
 			}
 			
 			public function forceRedraw() : void {
-				
-				switch(_chartType) {
-					
-					case Constants.GLD_PLD_RATIO:
-					case Constants.GLD_PLT_RATIO:
-					case Constants.GLD_SLV_RATIO:
-					case Constants.MY_STACK:
-						
-						_scale = 1;
-						break;
-					
-					default:
-						
-						_scale = _weightUnits == Constants.UNITS_GR ? Constants.GROZ_RATIO : 1;
-				}
-				
+							
 				chart.series = chart.series;
 				
 			}
@@ -184,29 +226,53 @@
 			protected var _currency:String;
 			protected var _chartType:String;
 			protected var _scale:Number = 1;
-			protected var _zoom:Number = 1;
-			protected var _pan:Number = 0;
+			protected var _horizontalStart:Object = {};
+			protected var _horizontalEnd:Object = {};
+			protected var _verticalStart:Object = {};
+			protected var _verticalEnd:Object = {};			
+			protected var _data:Array;
+			protected var _history:Array;
 			
-			protected function currentDataPoint() : Point 
-			{			
-				var dataPoint:Array = serieToday.localToData( new Point(serieToday.mouseX,serieToday.mouseY) );		
-				return new Point(dataPoint[0], dataPoint[1]);
+			/* Flags indicating that some parts of UI must be updated.
+			 * Update is done only once in UpdateDisplayList.
+			 */
+			
+			protected var _updateChartTitleNeeded:Boolean = true;
+			protected var _updateVBoundsNeeded:Boolean = true;
+			
+			public function setHistData( data:Array ) : void 
+			{
+				
+				_history = data;
+				
+				if(_dataRange == Constants.RANGE_HISTORY ) {
+					
+					serieMain.dataProvider = _history;
+					
+					/* Update GUI */
+					_updateVBoundsNeeded = true;	
+					invalidateDisplayList();
+					
+				}
 				
 			}
-			
-			protected function get baseWindowMin() : Number 
-			{
-				return 0;
-			}
-			
-			protected function get baseWindowMax() : Number 
-			{
-				return 24*60;
-			}
-			
-			protected function get minWindowWidth() : Number 
-			{
-				return 2;
+
+			public function setLiveData( data:Array ) : void
+			{	
+
+				_data = data;
+				serie1DayAgo.dataProvider = serie2DaysAgo.dataProvider = data;
+				
+				if(_dataRange != Constants.RANGE_HISTORY ) {
+					
+					serieMain.dataProvider = serie1DayAgo.dataProvider;
+					
+					/* Update GUI */
+					_updateVBoundsNeeded = true;	
+					invalidateDisplayList();
+					
+				}
+
 			}
 			
 			protected function updateChartTitle() : void {
@@ -250,85 +316,244 @@
 					chartTitle = "";
 				}
 				
-				//chartLabel.text = chartTitle;
-				//verticalAxis.title = axisTitle;
+				_updateChartTitleNeeded = false;
 				
 			}
 			
-			public function zoom( scale:Number, center:Point ) : void {
+			private function get dataMin() : Number {
 				
-				var startX:Number = Math.round(center.x -  (center.x - horizontalAxis.minimum) / scale );
-				var endX:Number = Math.round(center.x + (horizontalAxis.maximum - center.x) / scale );
+				if(_dataRange == Constants.RANGE_HISTORY) {
+					
+					return 0;
+					
+				} else {
+					
+					if(_data && _data.length > 0) {
+						return (_data[0][Constants.TIME] as Date).time;
+					} else {
+						return (new Date).setHours(0,0,0,0);
+					}
+					
+				}
 				
-				// Zoom speed
+			}
+			private function get dataMax() : Number {
+				
+				if(_dataRange == Constants.RANGE_HISTORY) {
+					
+					return (new Date()).time;
+					
+				} else {
+					
+					if(_data && _data.length > 0) {
+						return (_data[_data.length-1][Constants.TIME] as Date).time;
+					} else {
+						return (new Date).setHours(23,58,0,0);
+					}
+					
+				}				
+				
+			}
+			
+			public function zoom( scale:Number, center:Number ) : void {
+				
+				/* Zoom speed */
 				scale = Math.pow(scale,_zoomSpeed);
 				
-				if(startX < baseWindowMin) startX = baseWindowMin;
-				if(endX > baseWindowMax) endX = baseWindowMax;
+				/* Calculate max and min */
+				var start:Number = center -  (center - horizontalAxis.minimum) / scale;
+				var end:Number = center + (horizontalAxis.maximum - center) / scale;
+					
+				if( (end - start) < _maxZoom ) return;
 				
-				horizontalAxis.minimum = startX;
-				horizontalAxis.maximum = endX;
+				if(start < dataMin) start = dataMin;
+				if(end > dataMax) end = dataMax;
 				
+				horizontalAxis.minimum = start;
+				horizontalAxis.maximum = end;
+
+				/* Save current data window bounds */
+				_horizontalStart[_dataRange] = horizontalAxis.minimum;
+				_horizontalEnd[_dataRange] = horizontalAxis.maximum;
+				
+				/* Update GUI */
+				_updateVBoundsNeeded = true;	
+				invalidateDisplayList();
+									
 			}
 			
 			public function pan( offset:Number ) : void {
 				
-				var delta:Number = ( horizontalAxis.maximum - horizontalAxis.minimum ) * (offset / chart.width );
+				/* Calculate max and min */
+				var a:Array = serieMain.localToData( new Point(offset,0) );
+				var delta:Number = a[0] - horizontalAxis.minimum;
 				var max:Number = horizontalAxis.maximum - delta;
-				var min:Number = horizontalAxis.minimum - delta;	
+				var min:Number = horizontalAxis.minimum - delta;
 				
-				if( min < 0 ) {
+				if( min < dataMin ) {
 					
-					max = Math.min(24*60,max-min);
-					min = 0;
+					max = Math.min(dataMax,dataMin+(max-min));
+					min = dataMin;
 					
-				} else if( max > 24*60 ) {
+				} else if( max > dataMax ) {
 					
-					min = Math.max(0,min - (max - 24*60));
-					max = 24*60;
+					min = Math.max(dataMin,dataMax-(max-min));
+					max = dataMax;
 				}
 				
 				horizontalAxis.minimum = min;
-				horizontalAxis.maximum = max;							
+				horizontalAxis.maximum = max;
+				
+				/* Save current data window bounds */
+				_horizontalStart[_dataRange] = horizontalAxis.minimum;
+				_horizontalEnd[_dataRange] = horizontalAxis.maximum;				
+				
+				/* Update GUI */
+				_updateVBoundsNeeded = true;	
+				invalidateDisplayList();				
 				
 			}
 			
-			public function seriesDataFunction( series:Series, item:Object, fieldName:String ):Object {
+			protected function updateVBounds() : void {
+				
+				var data:Array = (_dataRange == Constants.RANGE_HISTORY) ? _history : _data;
+				
+				if( data && data.length > 0 ) {
+					
+					var max:Number = NaN;
+					var min:Number = NaN;
+					
+					for( var i:uint=0; i<data.length; i++ ) {
+						
+						var time:Number = (data[i][Constants.TIME] as Date).time;
+						var val:Number;
+						
+						if( time < horizontalAxis.minimum ) 
+							continue;
+						if( time > horizontalAxis.maximum ) 
+							break;
+						
+						val = seriesDataFunction(serieMain,data[i],"yValue");
+						if( !isNaN(val) ) {						
+							max = isNaN(max) ? val : Math.max(max,val);
+							min = isNaN(min) ? val : Math.min(min,val);
+						}
+						
+						if( _dataRange == Constants.RANGE_3DAYS ) {
+							
+							val = seriesDataFunction(serie1DayAgo,data[i],"yValue");
+							if(!isNaN(data[i][Constants.ONE_DAY_AGO]) ) {
+								max = isNaN(max) ? val : Math.max(max,val);
+								min = isNaN(min) ? val : Math.min(min,val);
+							}
+							
+							val = seriesDataFunction(serie2DaysAgo,data[i],"yValue");
+							if(!isNaN(data[i][Constants.TWO_DAYS_AGO]) ) {
+								max = isNaN(max) ? val : Math.max(max,val);
+								min = isNaN(min) ? val : Math.min(min,val);
+							}
+							
+						}
+						
+					}
+					
+					/* Add a bit of air over and under the series */
+					if( max > min ) {
+						
+						var padding:Number = (max-min)*0.05;
+						max += padding;
+						min = Math.max(0,min + padding);
+						
+					}
+					
+					verticalAxis.maximum = max;
+					verticalAxis.minimum = min;
+					
+					/* Save current data window bounds */
+					
+					_verticalStart[_dataRange] = verticalAxis.minimum;
+					_verticalEnd[_dataRange] = verticalAxis.maximum;					
+					
+				}
+				
+				_updateVBoundsNeeded = false;
+				
+			}
+			
+			public function seriesDataFunction( series:Series, item:Object, fieldName:String ):Number {
 				
 				var s:LineSeries = LineSeries( series );
 				
 				if( fieldName == "yValue" ) {
+					
 					return item[s.yField] * _scale;
-				} else {
-					return item[s.xField];
+					
+				} else if(item[s.xField] is Date) {
+										
+					return item[s.xField].time;
+					
 				}
+				
+				return item[s.xField];
 				
 			}
 			
 			public function hLabelFunction( val:Number, prevVal:Number, axis:IAxis ) : String {
 				
-				var hour:int = Math.round(val / 60);
-				var min:int = val % 60;
-				
-				return ((hour < 10) ? "0" + hour.toString() : hour.toString()) + ":" + ((min < 10) ? "0" + min.toString() : min.toString());
+				if( _dataRange == Constants.RANGE_HISTORY) {
+					return dateFormat.format(val);
+				} else {
+					return timeFormat.format(val);
+				}
 				
 			}
 			
 			public function vLabelFunction( val:Number, prevVal:Number, axis:IAxis ) : String {
 				
 				if( vertAxisCurrFormat ) {
-					return vertAxisCurrFormat.format(val);
+					return vertAxisCurrFormat.format( val );
 				} else {
 					return "0.00";
 				}
 				
-			}			
+			}	
+			
+			protected function dataTipFunction(hitData:HitData) : String {
+				
+				var title:String = "";
+				
+				if( hitData.element == serieMain ) {
+					if( _dataRange == Constants.RANGE_HISTORY ) {
+						title = "GOLD";
+					} else {
+						title = "TODAY";
+					}
+				} else if( hitData.element == serie1DayAgo ) {
+					title = "YESTERDAY";
+				} else if( hitData.element == serie2DaysAgo ) {
+					title = "TWO DAYS AGO";
+				}
+				
+				return "<p>" + title + "</p>"
+					  + "<p>" + hLabelFunction(hitData.chartItem["xValue"],0,horizontalAxis) + "</p>"
+					  + "<p>" + vLabelFunction(hitData.chartItem["yValue"],0,verticalAxis) + " " + _currency.toUpperCase() + "</p>";
+				
+			}
+
 			
 			public override function styleChanged( styleProp:String ) : void {
 				
 				super.styleChanged( styleProp );
 				
 				switch( styleProp ) {
+					
+					case STYLE_CHART_BACKGROUND_COLOR:
+						chartBackgroundFill.color = Number(getStyle( styleProp ));
+						break;
+					
+					case STYLE_CHART_BACKGROUND_ALPHA:
+						chartBackgroundFill.alpha = Number(getStyle( styleProp ));
+						break;					
 					
 					case STYLE_SERIE_TODAY_COLOR:
 						serieTodayStroke.color = Number(getStyle( styleProp ));
@@ -356,14 +581,56 @@
 					
 					case STYLE_AXIS_COLOR:
 						horizontalAxisStroke.color = verticalAxisStroke.color = Number(getStyle( styleProp ));
+						break;					
+					
+					case STYLE_V_GRID_STROKE_COLOR:
+						verticalGridStroke.color = Number(getStyle( styleProp ));
 						break;
 					
-					case STYLE_GRID_COLOR:
-						horizontalGridStroke.color = verticalGridStroke.color = Number(getStyle( styleProp ));
+					case STYLE_V_GRID_STROKE_ALPHA:
+						verticalGridStroke.alpha = Number(getStyle( styleProp ));
 						break;					
+					
+					case STYLE_H_GRID_STROKE_COLOR:
+						horizontalGridStroke.color = Number(getStyle( styleProp ));
+						break;
+					
+					case STYLE_H_GRID_STROKE_ALPHA:
+						horizontalGridStroke.alpha = Number(getStyle( styleProp ));
+						break;					
+					
+					case STYLE_V_GRID_FILL_COLOR:
+						verticalGridFill.color = Number(getStyle( styleProp ));
+						break;
+					
+					case STYLE_V_GRID_FILL_ALPHA:
+						verticalGridFill.alpha = Number(getStyle( styleProp ));
+						break;					
+					
+					case STYLE_H_GRID_FILL_COLOR:
+						horizontalGridFill.color = Number(getStyle( styleProp ));
+						break;
+					
+					case STYLE_H_GRID_FILL_ALPHA:
+						horizontalGridFill.alpha = Number(getStyle( styleProp ));
+						break;					
+					
+					case "fontFamily":	
+						verticalAxisRenderer.setStyle("fontFamily", getStyle( styleProp ) );
+						horizontalAxisRenderer.setStyle("fontFamily", getStyle( styleProp ) );
+						break;
 					
 				}
 	
+			}
+			
+			protected override function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
+				
+				if( _updateChartTitleNeeded ) updateChartTitle();
+				if( _updateVBoundsNeeded ) updateVBounds();
+				
+				super.updateDisplayList(unscaledWidth, unscaledHeight );
+				
 			}
 			
 			//////////////////////////////////////////////////////
@@ -380,20 +647,19 @@
 			
 			protected function creationCompleteHandler(event:FlexEvent):void {
 				
+				this.addEventListener(MouseEvent.MOUSE_DOWN,pan_mouseDownHandler);
+				
 			}			
 			
 			protected function mouseWheelHandler( e:MouseEvent ) : void {
 				
-				var p:Point = serieToday.globalToLocal( e.target.localToGlobal( new Point(e.localX, e.localY) ) );
-				var a:Array = serieToday.localToData( p );
-				var center:Point = new Point(a[0],a[1]);	
+				var p:Point = serieMain.globalToLocal( e.target.localToGlobal( new Point(e.localX, e.localY) ) );
+				var a:Array = serieMain.localToData( p );	
 				var scale:Number = e["delta"] > 0 ? 1 + e["delta"]/24 : 1/(1 - e["delta"]/24);
 				
-				zoom(scale,center);
+				zoom( scale, a[0] );
 				
 			}
-			
-			private var prevZoom:Number = 1;
 			
 			protected function zoomGestureHandler( e:TransformGestureEvent ) : void {
 					
@@ -405,11 +671,12 @@
 						break;
 					default:
 						
-						var p:Point = serieToday.globalToLocal( e.target.localToGlobal( new Point(e.localX, e.localY) ) );
-						var a:Array = serieToday.localToData( p );
-						var center:Point = new Point(a[0],a[1]);	
+						if(!serieMain || !serieMain.dataProvider) return;
+						
+						var p:Point = serieMain.globalToLocal( e.target.localToGlobal( new Point(e.localX, e.localY) ) );
+						var a:Array = serieMain.localToData( p );	
 					
-						zoom(e.scaleX,center);	
+						zoom(e.scaleX,a[0]);	
 				}				
 				
 			}
@@ -428,7 +695,36 @@
 				}	
 				
 
-			}						
+			}
+			
+			/* Pan mouse handlers */
+			
+			protected var _pan_mouseStart:Number;
+			
+			protected function pan_mouseDownHandler( e:MouseEvent ) : void {
+				
+				this.addEventListener(MouseEvent.MOUSE_MOVE,pan_mouseMoveHandler);
+				systemManager.getSandboxRoot().addEventListener(MouseEvent.MOUSE_UP, pan_mouseUpHandler);
+				systemManager.getSandboxRoot().addEventListener(SandboxMouseEvent.MOUSE_UP_SOMEWHERE, pan_mouseUpHandler);
+				
+				_pan_mouseStart = e.localX;
+				
+			}	
+			
+			protected function pan_mouseMoveHandler( e:MouseEvent ) : void {
+				
+				pan( e.localX - _pan_mouseStart );
+				_pan_mouseStart = e.localX;
+						
+			}
+			
+			protected function pan_mouseUpHandler( e:MouseEvent ) : void {
+				
+				this.removeEventListener(MouseEvent.MOUSE_MOVE,pan_mouseMoveHandler);
+				systemManager.getSandboxRoot().removeEventListener(MouseEvent.MOUSE_UP, pan_mouseUpHandler);
+				systemManager.getSandboxRoot().removeEventListener(SandboxMouseEvent.MOUSE_UP_SOMEWHERE, pan_mouseUpHandler);
+				
+			}			
 			
 		]]>
 	</fx:Script>
@@ -446,16 +742,29 @@
 	
 
 	
-	<!--s:Label id="chartLabel" width="100%" textAlign="center" styleName="myLabel fontMedium" /-->
+	<s:Label id="chartLabel" width="100%" textAlign="center" styleName="myLabel fontMedium" />
 	
-	<mx:LineChart id="chart" width="100%" height="100%" cacheAsBitmap="true" showDataTips="true" mouseWheel="mouseWheelHandler(event)" gutterTop="5" gutterRight="30" >
+	<mx:LineChart id="chart" 
+				  width="100%" 
+				  height="100%"   
+				  paddingLeft="5"
+				  gutterRight="30"
+				  cacheAsBitmap="true" 
+				  showDataTips="true" 
+				  mouseWheel="mouseWheelHandler(event)" 
+				  dataTipFunction="dataTipFunction"
+				  interactionMode="touch"
+				  dataTipRenderer="com.goldpricecafe.mobile.CustomDataTip">
+		
+		<mx:filters></mx:filters>	
+		<mx:seriesFilters></mx:seriesFilters>
 		
 		<!-- Vertical Axis -->
 		<mx:verticalAxis>
-			<mx:LinearAxis id="verticalAxis" baseAtZero="false" labelFunction="{vLabelFunction}" />
+			<mx:LinearAxis id="verticalAxis" baseAtZero="false" />
 		</mx:verticalAxis>
 		<mx:verticalAxisRenderers>					
-			<mx:AxisRenderer id="verticalAxisRenderer" axis="{verticalAxis}" styleName="fontSmall">
+			<mx:AxisRenderer id="verticalAxisRenderer" axis="{verticalAxis}" styleName="fontChart" labelClass="mx.controls.Label"  tickStroke="{verticalAxisStroke}">
 				<mx:axisStroke>
 					<mx:SolidColorStroke id="verticalAxisStroke" weight="1" color="{getStyle('color')}"/>
 				</mx:axisStroke>							
@@ -464,33 +773,46 @@
 		
 		<!-- Horizontal Axis -->
 		<mx:horizontalAxis>
-			<mx:LinearAxis id="horizontalAxis" baseAtZero="false" maximum="{24*60}" labelFunction="{hLabelFunction}" autoAdjust="false"/>
+			<mx:LinearAxis id="horizontalAxis" baseAtZero="false"  labelFunction="{hLabelFunction}" autoAdjust="true"/>
 		</mx:horizontalAxis>
 		<mx:horizontalAxisRenderers>					
-			<mx:AxisRenderer id="horizontalAxisRenderer" axis="{horizontalAxis}" styleName="fontSmall" >
+			<mx:AxisRenderer id="horizontalAxisRenderer" axis="{horizontalAxis}" styleName="fontChart" labelClass="mx.controls.Label" tickStroke="{horizontalAxisStroke}">
 				<mx:axisStroke>
-					<mx:SolidColorStroke id="horizontalAxisStroke" weight="1" color="{getStyle('color')}"/>
+					<mx:SolidColorStroke id="horizontalAxisStroke" weight="1" color="{getStyle('color')}" />
 				</mx:axisStroke>							
 			</mx:AxisRenderer>
 		</mx:horizontalAxisRenderers>
 		
 		<!-- Grid -->
 		<mx:backgroundElements>
+			<s:Group left="0" right="0" top="0" bottom="0">	
+				<s:Rect left="0" right="0" top="0" bottom="0">
+					<s:fill>
+						<s:SolidColor id="chartBackgroundFill" color="{getStyle('chartBackgroundColor')}" alpha="{getStyle('chartBackgroundAlpha')}"/>
+					</s:fill>
+				</s:Rect>
+			</s:Group>
 			<mx:GridLines id="gridlines" gridDirection="both">
 				<mx:horizontalStroke>
-					<mx:SolidColorStroke id="horizontalGridStroke" color="{getStyle('gridColor')}" weight="1" />						
+					<mx:SolidColorStroke id="horizontalGridStroke" color="{getStyle('hGridStrokeColor')}" alpha="{getStyle('hGridStrokeAlpha')}" weight="1" />						
 				</mx:horizontalStroke>
+				<mx:horizontalFill>
+					<s:SolidColor id="horizontalGridFill" color="{getStyle('hGridFillColor')}" alpha="{getStyle('hGridFillAlpha')}" />
+				</mx:horizontalFill>
 				<mx:verticalStroke>
-					<mx:SolidColorStroke id="verticalGridStroke" color="{getStyle('gridColor')}" weight="1"/>
+					<mx:SolidColorStroke id="verticalGridStroke" color="{getStyle('vGridStrokeColor')}" alpha="{getStyle('vGridStrokeAlpha')}" weight="1"/>
 				</mx:verticalStroke>
+				<mx:verticalFill>
+					<s:SolidColor id="verticalGridFill" color="{getStyle('vGridFillColor')}" alpha="{getStyle('vGridFillAlpha')}" />
+				</mx:verticalFill>				
 			</mx:GridLines>			
 		</mx:backgroundElements>
 		
 		<!-- Series -->
 		<mx:series>
-			<mx:LineSeries id="serie2DaysAgo" interpolateValues="true" lineStroke="{serie2DaysAgoStroke}" xField="{Constants.TIME}" yField="{Constants.TWO_DAYS_AGO}" selectable="true" dataFunction="{seriesDataFunction}"/>
+			<mx:LineSeries id="serie2DaysAgo" interpolateValues="true" lineStroke="{serie2DaysAgoStroke}" xField="{Constants.TIME}" yField="{Constants.TWO_DAYS_AGO}" selectable="true" dataFunction="{seriesDataFunction}" />
 			<mx:LineSeries id="serie1DayAgo" interpolateValues="true" lineStroke="{serie1DayAgoStroke}" xField="{Constants.TIME}" yField="{Constants.ONE_DAY_AGO}" selectable="true" dataFunction="{seriesDataFunction}" />
-			<mx:LineSeries id="serieToday" interpolateValues="true" lineStroke="{serieTodayStroke}" xField="{Constants.TIME}" yField="{Constants.TODAY}" selectable="true" dataFunction="{seriesDataFunction}" />	
+			<mx:LineSeries id="serieMain" interpolateValues="true" lineStroke="{serieTodayStroke}" xField="{Constants.TIME}" yField="{Constants.TODAY}" selectable="true" dataFunction="{seriesDataFunction}" />		
 		</mx:series>
 		
 	</mx:LineChart>	

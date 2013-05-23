@@ -123,12 +123,14 @@ package com.goldpricecafe.mobile.skins {
 			
 			h += layoutPaddingTop + adjustablePaddingBottom;
 			
-			// measuredMinHeight for width and height for a square measured minimum size
-			measuredMinWidth = h;
-			measuredMinHeight = h;
+			measuredWidth = w + layoutGap + h;
+			measuredHeight = h;			
 			
-			measuredWidth = w + layoutGap + h
-			measuredHeight = h;
+
+			measuredMinWidth = 0.75 * measuredWidth;
+			measuredMinHeight = measuredMinHeight;
+			
+
 						
 		}
 		

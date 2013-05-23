@@ -1,20 +1,19 @@
 package com.goldpricecafe.mobile
 {
+	import flash.errors.IOError;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.IOErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
 	import flash.utils.ByteArray;
-	
 	import mx.collections.ArrayCollection;
 	import mx.messaging.ChannelSet;
 	import mx.messaging.Consumer;
 	import mx.messaging.channels.AMFChannel;
 	import mx.messaging.channels.StreamingAMFChannel;
 	import mx.messaging.events.MessageEvent;
-	import mx.messaging.messages.IMessage;
-	
 	import nochump.util.zip.ZipEntry;
 	import nochump.util.zip.ZipFile;
 	
@@ -22,6 +21,8 @@ package com.goldpricecafe.mobile
 	{
 		
 		public static const NEW_DATA:String = "newData";
+		public static const HISTORY_LOADED:String = "historyLoaded";
+		public static const IO_ERROR:String = IOErrorEvent.IO_ERROR;
 		
 		/* BlazeDS config */
 
@@ -35,7 +36,7 @@ package com.goldpricecafe.mobile
 		
 		/* End BlazeDS config */
 		
-		private static const _dataUrl:String = "http://goldpricecafe.com:8400/alive5/Alive6_HiRes/data.zip";
+		private static const _dataUrl:String = "http://goldpricecafe.com:8400/alive5/Alive6_HiRes/data.csv";
 		private static const _historyUrl:String = "http://goldpricecafe.com:8400/alive5/Alive6_HiRes/hi.zip";
 		private static const _timeUrl:String = "http://goldpricecafe.com:8400/alive5/Alive6_HiRes/time.txt";
 		private static const _updatesPeriod:Number = 2 * 60 * 1000;
@@ -52,13 +53,12 @@ package com.goldpricecafe.mobile
 		private var _timeLoader:URLLoader;
 		private var _dataLoaded:Boolean = false;
 		private var _timeLoaded:Boolean = false;
+		private var _lastUpdatedLine:int = 0;
 
 		
 		public function BlazeDataProvider()
 		{		
-			loadData();	
-			loadHistory();
-			initConsumer();
+			loadData();
 		}
 		
 		public function getData(currency:String) : Object
@@ -73,11 +73,12 @@ package com.goldpricecafe.mobile
 			data[Constants.PLATINUM] = [];
 			data[Constants.PALLADIUM] = [];
 			
-			if( !data[Constants.GOLD] ) return data;
+			if( !data[Constants.GOLD] ) 
+				return data;
 			
 			for( var i:uint = 0; i<data[Constants.GOLD].length; i++ ) {
 				
-				var time:Number = data[Constants.GOLD][i][Constants.TIME];
+				var time:Date = data[Constants.GOLD][i][Constants.TIME];
 				var gldPriceToDay:Number = data[Constants.GOLD][i][Constants.TODAY];
 				var gldPrice1DayAgo:Number = data[Constants.GOLD][i][Constants.ONE_DAY_AGO];
 				var gldPrice2DaysAgo:Number = data[Constants.GOLD][i][Constants.TWO_DAYS_AGO];
@@ -102,7 +103,16 @@ package com.goldpricecafe.mobile
 			}
 			
 			return data;
-		}			
+		}
+		
+		public function getHistory( currency:String ) : Array {
+			
+			if(_history)
+				return _history[currency];
+			else 
+				return null;
+
+		}
 		
 		public function getNextUpdateTime():Date {
 			
@@ -131,32 +141,34 @@ package com.goldpricecafe.mobile
 			
 		}
 		
-		protected function loadData() : void {
+		public function loadData() : void {
 		
 			try {
 				
 				if( !_dataLoader ) {
 					_dataLoader = new URLLoader();
 					_dataLoader.addEventListener(Event.COMPLETE, dataLoaderHandler);	
-					_dataLoader.dataFormat = URLLoaderDataFormat.BINARY;	
+					_dataLoader.addEventListener(IOErrorEvent.IO_ERROR, ioErrorHandler);
+					_dataLoader.dataFormat = URLLoaderDataFormat.TEXT;	
 				}
 				_dataLoader.load( new URLRequest(_dataUrl) );
 				
-			} catch( e:Error ) {
+			} catch( e:IOError ) {
 							
 				trace( e.message );
 				
-			}				
+			} 
 			
 		}
 		
-		protected function loadHistory() : void {
+		public function loadHistory() : void {
 			
 			try {
 				
 				if( !_historyLoader ) {
 					_historyLoader = new URLLoader();
 					_historyLoader.addEventListener(Event.COMPLETE, historyLoaderHandler);	
+					_dataLoader.addEventListener(IOErrorEvent.IO_ERROR, ioErrorHandler);
 					_historyLoader.dataFormat = URLLoaderDataFormat.BINARY;	
 				}
 				_historyLoader.load( new URLRequest(_historyUrl) );
@@ -186,18 +198,44 @@ package com.goldpricecafe.mobile
 				
 			}				
 			
-		}		
+		}
 		
-		protected function dataLoaderHandler( e:Event ) : void {
+		protected function ioErrorHandler( e:IOErrorEvent ) : void {
 			
-			_data = parseDataZIP( new ZipFile( e.target.data ) );		
-			loadTime();
+			if(hasEventListener(IO_ERROR)) {
+				dispatchEvent( e );
+			}
 			
 		}
 		
+		protected function zipDataLoaderHandler( e:Event ) : void {			
+			
+			_data = {};
+			
+			var zip:ZipFile = new ZipFile( e.target.data ); 
+			var entry:ZipEntry = zip.entries[0];   
+			var rawData:ByteArray = zip.getInput(entry);
+			
+			var parser:AsyncDataParser = new AsyncDataParser();
+			parser.parseLiveDataCSVAsync( rawData.toString(), liveChunkParsed, liveParsingCompleted );
+			
+		}
+		
+		protected function dataLoaderHandler( e:Event ) : void {			
+			
+			_data = {};
+
+			var parser:AsyncDataParser = new AsyncDataParser();
+			parser.parseLiveDataCSVAsync( e.target.data, liveChunkParsed, liveParsingCompleted );
+			
+		}		
+		
 		protected function historyLoaderHandler( e:Event ) : void {
 			
-			_history = parseHistoryZIP( new ZipFile( e.target.data ) );
+			_history = {};
+			
+			var parser:AsyncDataParser = new AsyncDataParser();			
+			parser.parseHistDataAsync( new ZipFile( e.target.data ), histChunkParsed, histParsingCompleted );
 						
 		}
 		
@@ -223,11 +261,11 @@ package com.goldpricecafe.mobile
 			_nextUpdate = new Date();
 			_nextUpdate.setMilliseconds( _nextUpdate.getMilliseconds() + _updatesPeriod );
 			
-			dispatchEvent( new Event(NEW_DATA) );
+			loadTime();
 			
-			//loadTime();
-			
-		}	
+		}
+		
+		
 		
 		protected function extractNewData( newData:Array ) : void {
 			
@@ -270,6 +308,10 @@ package com.goldpricecafe.mobile
 			
 		}
 		
+		
+			
+		
+		/** Not used. Moved to AsyncDataParser. */
 		public function parseDataZIP( zipFile:ZipFile ) : Object {
 			
 			var entry:ZipEntry = zipFile.entries[0];   
@@ -278,26 +320,9 @@ package com.goldpricecafe.mobile
 			
 			_weekend = (strings.pop() == "weekend"); 
 			var lines:String = strings.pop();
-			var todayDate:Date = new Date();	
-			todayDate.setTime( Date.parse(strings.pop() ) );
-			strings.pop();
-			strings.pop();			
-			
-			return parseStringArray(strings);
-			
-		}
-		
-		public function parseHistoryZIP( zipFile:ZipFile ) : Object {
-			
-			var entry:ZipEntry = zipFile.entries[0];   
-			var rawData:ByteArray = zipFile.getInput(entry);	
-			var strings:Array = rawData.toString().split("\n");			
-			
-			return parseStringArray(strings);
-			
-		}
-		
-		public function parseStringArray( strings:Array ) : Object {			
+			var todayDate:Date = new Date( Date.parse(strings.pop()) );	
+			var yesterday:Date = new Date( Date.parse(strings.pop()) );
+			var twoDaysAgo:Date = new Date( Date.parse(strings.pop()) );			
 			
 			var data:Object = {};
 			var itr:uint = 0;
@@ -313,8 +338,8 @@ package com.goldpricecafe.mobile
 					data[type] = [];
 					itr = 0;
 					
-				} else if (record.length == 4) { // Data
-										
+				} else if (record.length == 4) { // Data: time, price0, price1, price2
+					
 					data[type][itr] = {};
 					data[type][itr][Constants.TIME] = parseTime(record[0]);
 					data[type][itr][Constants.TODAY] = parsePrice(record[1]);
@@ -328,27 +353,123 @@ package com.goldpricecafe.mobile
 			
 			return data;
 			
-		}		
+		}
 		
-		public function parseTime( time:String ) : Number {
+		/** Not used. Moved to AsyncDataParser. */
+		public function parseHistoryZIP( zipFile:ZipFile ) : Object {
 			
-			if( (!time) || (time == "") ) return Number.NaN;
+			var entry:ZipEntry = zipFile.entries[0];   
+			var rawData:ByteArray = zipFile.getInput(entry);	
+			var strings:Array = rawData.toString().split("\n");			
 			
-			var parts:Array = time.split(":");	
-			if( parts.length != 2 ) {
-				return Number.NaN;
+			var data:Object = {};
+			var itr:uint = 0;
+			var type:String;
+			
+			for( var i:uint = 0; i<strings.length; i++ ) {
+				
+				var record:Array = (strings[i] as String).split(",");
+				
+				if( record.length == 1 ) { // Type: currency or ratio name
+					
+					type = record[0]; 
+					data[type] = [];
+					itr = 0;
+					
+				} else if (record.length == 2) { // Data: date,price
+					
+					data[type][itr] = {};
+					data[type][itr][Constants.TIME] = parseTime(record[0]);
+					data[type][itr][Constants.TODAY] = parsePrice(record[1]);
+					
+					itr++;
+					
+				} 
+				
 			}
 			
-			var hours:Number = parseInt( parts[0] );
-			if( isNaN(hours) ) return NaN;
-			var minutes:Number = parseInt( parts[1] );
-			if( isNaN(minutes) ) return NaN;	
-			
-			return hours * 60 + minutes;
+			return data;
 			
 		}
 		
-		public function parsePrice( price:String ) : Number {
+		//////////////////////////////////////////////////////
+		//                                     				//
+		//				AsyncParser callbacks				//
+		//													//
+		//////////////////////////////////////////////////////
+		
+		public function histChunkParsed( type:String, data:Array ) : void {
+			
+			_history[type] = data;
+			
+		}
+		
+		public function liveChunkParsed( type:String, data:Array ) : void {
+			
+			_data[type] = data;
+			
+		}
+		
+		public function histParsingCompleted() : void {
+			
+			dispatchEvent( new Event(HISTORY_LOADED) );
+		}
+		
+		public function liveParsingCompleted() : void {
+			
+			initConsumer();			
+			loadTime();
+			
+		}		
+		
+		//////////////////////////////////////////////////////
+		//                                     				//
+		//					Utilities						//
+		//													//
+		//////////////////////////////////////////////////////
+		
+		private static function parseTime( time:String ) : Date {
+			
+			if( (!time) || (time == "") ) return null
+				
+			var timeRegExp:RegExp = /\d{1,2}:\d{1,2}/;
+			var fullRegExp:RegExp = /\d{1,2}-\d{1,2}-\d{1,4}/;
+			var parts:Array;
+			
+			if( time.match(timeRegExp) ) { // Time only
+				
+				parts = time.split(":");	
+				if( parts.length != 2 ) {
+					return null;
+				}
+				
+				var hours:Number = parseInt( parts[0] );
+				var minutes:Number = parseInt( parts[1] );	
+				
+				return new Date( (new Date()).setHours(hours,minutes) );
+	
+			} else if( time.match(fullRegExp) ) { // Full date
+				
+				parts = time.split("-");	
+				if( parts.length != 3 ) {
+					return null;
+				}
+				
+				var day:Number = parseInt( parts[0] );
+				var month:Number = parseInt( parts[1] );
+				var year:Number = parseInt( parts[2] );
+				var date:Date = new Date(year > 1000 ? year : 2000 + year,month,day,0,0,0,0);
+
+				return date;
+				
+			}
+			
+			return null;
+
+			
+		}
+		
+		private static function parsePrice( price:String ) : Number {
 			
 			if( (!price) || (price=="") ) return Number.NaN;
 			return Number(price);

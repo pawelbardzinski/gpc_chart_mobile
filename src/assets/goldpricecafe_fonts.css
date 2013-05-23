@@ -1,0 +1,66 @@
+@namespace s "library://ns.adobe.com/flex/spark";
+
+@font-face {
+	src: url("assets/Michroma.ttf");
+	fontFamily: michromaCFF;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: true;
+}
+
+@font-face {
+	src: url("assets/Michroma.ttf");
+	fontFamily: michroma;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: false;
+}
+
+@font-face {
+	src: url("assets/MateSC-Regular.ttf");
+	fontFamily: mateCFF;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: true;
+}
+
+@font-face {
+	src: url("assets/MateSC-Regular.ttf");
+	fontFamily: mate;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: false;
+}
+
+
+@font-face {
+	src: url("assets/arial.ttf");
+	fontFamily: arialCFF;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: true;
+}
+
+@font-face {
+	src: url("assets/arial.ttf");
+	fontFamily: arial;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: false;
+}
+
+@font-face {
+	src: url("assets/tahoma.ttf");
+	fontFamily: tahomaCFF;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: true;
+}
+
+@font-face {
+	src: url("assets/tahoma.ttf");
+	fontFamily: tahoma;
+	fontWeight: normal;	
+	fontStyle: normal;
+	embedAsCFF: false;
+}

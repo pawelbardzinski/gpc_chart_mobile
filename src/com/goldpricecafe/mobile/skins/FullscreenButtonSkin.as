@@ -17,7 +17,7 @@ package com.goldpricecafe.mobile.skins {
 	use namespace mx_internal;
 
 	[HostComponent("spark.skins.mobile.supportClasses.ButtonSkinBase")]
-	public class CustomButtonSkin extends ButtonSkinBase
+	public class FullscreenButtonSkin extends ButtonSkinBase
 	{
 		protected static const IS_FLAT_STYLE:String = "flat";
 		protected static const CHROME_COLOR_STYLE:String = "chromeColor";
@@ -34,7 +34,7 @@ package com.goldpricecafe.mobile.skins {
 		protected var CHROME_COLOR_ALPHAS:Array = [1, 1];
 
 		
-		public function CustomButtonSkin() {
+		public function FullscreenButtonSkin() {
 			
 			super();
 			
@@ -110,19 +110,23 @@ package com.goldpricecafe.mobile.skins {
 			val = getStyle(PADDING_RIGHT_STYLE);
 			layoutPaddingRight = (!isNaN(val) && val) > 0 ? val : layoutPaddingRight;			
 			
-		
+			/* The rest is copied allmost directly */
+			
 			super.measure();
 			
 			var labelWidth:Number = 0;
 			var labelHeight:Number = 0;
 			var textDescent:Number = 0;
 			var iconDisplay:DisplayObject = getIconDisplay();
-
+			
+			// reset text if it was truncated before.
 			if (hostComponent && labelDisplay.isTruncated)
 				labelDisplay.text = hostComponent.label;
 			
+			// we want to get the label's width and height if we have text or there's
+			// no icon present
 			if (labelDisplay.text != "" || !iconDisplay)
-			{			
+			{
 				labelWidth = getElementPreferredWidth(labelDisplay);
 				labelHeight = getElementPreferredHeight(labelDisplay);
 				textDescent = labelDisplay.getLineMetrics(0).descent;
@@ -142,6 +146,9 @@ package com.goldpricecafe.mobile.skins {
 			
 			var iconPlacement:String = getStyle("iconPlacement");
 			
+			// layoutPaddingBottom is from the bottom of the button to the text
+			// baseline or the bottom of the icon.
+			// It must be adjusted when descent grows larger than the padding.
 			var adjustablePaddingBottom:Number = layoutPaddingBottom;
 			
 			if (iconPlacement == IconPlacement.LEFT ||
@@ -165,6 +172,7 @@ package com.goldpricecafe.mobile.skins {
 				{
 					if (iconPlacement == IconPlacement.BOTTOM)
 					{
+						// adjust gap if descent is larger
 						h += Math.max(textDescent, layoutGap);
 					}
 					else
@@ -178,40 +186,15 @@ package com.goldpricecafe.mobile.skins {
 			
 			h += layoutPaddingTop + adjustablePaddingBottom;
 			
+			// measuredMinHeight for width and height for a square measured minimum size
 			measuredMinWidth = h;
 			measuredMinHeight = h;
 			
-			measuredWidth = w
+			measuredWidth = h
 			measuredHeight = h;
 						
 		}
-		
-		override protected function commitCurrentState():void
-		{			
-			super.commitCurrentState();
-			
-			var styleName:String = hostComponent.styleName ? hostComponent.styleName.toString() : "";
-			
-			if(isSelected()) {
-				hostComponent.styleName = (styleName + " selected");
-			} else {
-				var newString:String = styleName;
-				while((newString = styleName.replace("selected","")) != styleName) {
-					styleName = newString;
-				}			
-				hostComponent.styleName = styleName;
-			}
-			
-			labelDisplay.commitStyles();
-			invalidateDisplayList();
-			
-		}		
-		
-		override protected function createChildren():void {
-			
-			super.createChildren();
-			
-		}		 
+	 
 		
 		override protected function drawBackground(unscaledWidth:Number, unscaledHeight:Number):void {
 						
@@ -224,6 +207,7 @@ package com.goldpricecafe.mobile.skins {
 			var r1:Number = layoutCornerEllipseSize;
 			var r2:Number = layoutCornerEllipseSize + layoutBorderSize;
 			var r3:Number = layoutCornerEllipseSize + 2 * layoutBorderSize;
+			var colorLight:uint = ColorUtil.adjustBrightness2(chromeColor,glossiness);
 			
 			/*if(isDown()) {
 				labelDisplay.setStyle("color",ColorUtil.adjustBrightness2(getStyle("color"),-getStyle(GLOSSINESS_STYLE))); 
@@ -231,44 +215,35 @@ package com.goldpricecafe.mobile.skins {
 				labelDisplay.setStyle("color",getStyle("color")); 
 			}*/			
 			
-			if ( isDown() || isFlat ) {
 				
-				graphics.beginFill(chromeColor);
-				graphics.drawRoundRect(layoutBorderSize, layoutBorderSize, 
-					unscaledWidth - 2 * layoutBorderSize, 
-					unscaledHeight - 2 * layoutBorderSize, 
-					r2, r2);
-				graphics.endFill();	
+			graphics.beginFill(colorLight,0.8);
+			graphics.drawRoundRect(layoutBorderSize, layoutBorderSize, 
+				unscaledWidth - 2 * layoutBorderSize, 
+				unscaledHeight - 2 * layoutBorderSize, 
+				0, 0);
+			graphics.endFill();	
+			
+			graphics.lineStyle( layoutBorderSize, getStyle("color"), 1.0, true, LineScaleMode.NORMAL, CapsStyle.NONE, JointStyle.MITER );
+			
+			if(!isSelected()) {
+						
+				graphics.drawRect( 8*layoutBorderSize, 8*layoutBorderSize, unscaledWidth - 15*layoutBorderSize, unscaledHeight - 16*layoutBorderSize );		
+				graphics.moveTo( 8*layoutBorderSize, 12*layoutBorderSize);
+				graphics.lineTo( unscaledWidth - 7*layoutBorderSize, 12*layoutBorderSize);
 				
 			} else {
 				
-				var colorLight:uint = ColorUtil.adjustBrightness2(chromeColor,glossiness);
-				
-				graphics.beginFill(colorLight);
-				graphics.drawRoundRect(2*layoutBorderSize, 2*layoutBorderSize, 
-					unscaledWidth - 4 * layoutBorderSize + 1, 
-					unscaledHeight - 4 * layoutBorderSize + 1, 
-					r2, r2);
-				graphics.endFill();	
-				
-				graphics.beginFill(chromeColor);
-				graphics.drawRoundRect(3*layoutBorderSize, unscaledHeight*0.4, 
-					unscaledWidth - 6 * layoutBorderSize + 1, 
-					unscaledHeight*0.6 - 3 * layoutBorderSize + 1, 
-					r1, r1);
-				graphics.endFill();					
+				graphics.drawRect( 8*layoutBorderSize, unscaledHeight - 12*layoutBorderSize, unscaledWidth - 15*layoutBorderSize, 4*layoutBorderSize );	
 				
 			}
-						
+			
 			graphics.lineStyle( isSelected() ? 2 * layoutBorderSize : layoutBorderSize, borderColor, 1.0, true, LineScaleMode.NORMAL, CapsStyle.NONE, JointStyle.MITER );
 			drawBorder(borderColor,r3);
 			
 		}
 		
 		
-		protected function drawBorder( borderColor:uint, radius:Number ) : void {
-
-			graphics.drawRoundRect(0,0,unscaledWidth,unscaledHeight,radius,radius);			
+		protected function drawBorder( borderColor:uint, radius:Number ) : void {		
 			
 		}
 		

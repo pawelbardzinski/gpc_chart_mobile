@@ -4,7 +4,10 @@ package com.goldpricecafe.mobile
 
 	public interface IDataProvider extends IEventDispatcher
 	{	
-		function getData( currency:String ) : Object;	
+		function loadData() : void;
+		function loadHistory() : void;
+		function getData( currency:String ) : Object;
+		function getHistory( currency:String ) : Array;
 		function getNextUpdateTime() : Date;
 		function isWeekend() : Boolean;
 	}

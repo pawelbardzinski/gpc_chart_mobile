@@ -9,13 +9,14 @@ s|Button, s|RadioButton.button
 	skinClass: ClassReference("com.goldpricecafe.mobile.skins.CustomButtonSkin");
 }
 
+#fullScreenBtn
+{
+	skinClass: ClassReference("com.goldpricecafe.mobile.skins.FullscreenButtonSkin");	
+}
+
 s|RadioButton
 {
 	skinClass: ClassReference("com.goldpricecafe.mobile.skins.CustomRadioButtonSkin");
-}
-
-#currencyBtn {
-	skinClass: ClassReference("com.goldpricecafe.mobile.skins.DropdownButtonSkin");
 }
 
 s|DropDownList 

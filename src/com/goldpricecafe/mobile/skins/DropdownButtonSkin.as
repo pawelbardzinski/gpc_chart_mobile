@@ -74,6 +74,19 @@ package com.goldpricecafe.mobile.skins {
 	
 		}
 		
+		override protected function drawBorder(borderColor:uint, radius:Number):void {
+			
+			if( isDown() ) {
+			
+				graphics.drawRoundRectComplex(0,0,unscaledWidth,unscaledHeight,radius/2,radius/2,0,0);
+				
+			} else {
+				
+				super.drawBorder(borderColor,radius);
+			}
+			
+		}
+		
 		
 		
 	}

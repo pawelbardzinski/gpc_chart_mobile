@@ -1,14 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-
-    ADOBE SYSTEMS INCORPORATED
-    Copyright 2008 Adobe Systems Incorporated
-    All Rights Reserved.
-
-    NOTICE: Adobe permits you to use, modify, and distribute this file
-    in accordance with the terms of the license agreement accompanying it.
- 
---> 
+<?xml version="1.0" encoding="utf-8"?> 
 <!--- Custom DropDownList skin class for DropDownList mobile devices
         
       @langversion 3.0
@@ -17,7 +7,7 @@
       @productversion Flex 4
 -->
 <s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" 
-    xmlns:fb="http://ns.adobe.com/flashbuilder/2009" alpha.disabled=".5"> 
+    xmlns:fb="http://ns.adobe.com/flashbuilder/2009"> 
 
     <fx:Metadata>
 	    <![CDATA[ 
@@ -26,7 +16,10 @@
     </fx:Metadata> 
 
     <fx:Script fb:purpose="styling">
-        <![CDATA[            
+        <![CDATA[   
+			
+			import mx.utils.ColorUtil;
+
             
             /* Define the content fill items that should be colored by the "contentBackgroundColor" style. */
             static private const contentFill:Array = ["bgFill"];
@@ -40,6 +33,9 @@
              */
             override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void
             {
+				
+				setStyle("selectionColor", ColorUtil.adjustBrightness2( getStyle("contentBackgroundColor"), 10 ) );
+				
                 if (getStyle("borderVisible") == false)
                 {
                     if (border)
@@ -74,6 +70,7 @@
                     borderStroke.color = getStyle("borderColor");
                     borderStroke.alpha = getStyle("borderAlpha");
                 }
+				
                 super.updateDisplayList(unscaledWidth, unscaledHeight);
             }
         ]]>
@@ -99,7 +96,7 @@
               This includes borders, background colors, scrollers, and filters.
               @copy spark.components.supportClasses.DropDownListBase#dropDown
         -->
-        <s:Group id="dropDown">
+        <s:Group id="dropDown" interactionMode="touch">
         
             <!--- @private -->
             <s:RectangularDropShadow id="dropShadow" blurX="20" blurY="20" alpha="0.45" distance="7" 
@@ -113,24 +110,18 @@
                 </s:stroke>
             </s:Rect>
 
-            <!-- fill -->
             <!--- Defines the appearance of drop-down list's background fill. -->
             <s:Rect id="background" left="1" right="1" top="1" bottom="1" >
                 <s:fill>
-                <!---  
-                    The color of the drop down's background fill.
-                    The default color is 0xFFFFFF.
-                -->
-                    <s:SolidColor id="bgFill" color="0xFF"/>
+                    <s:SolidColor id="bgFill" color="0x000000" alpha="1"/>
                 </s:fill>
             </s:Rect>
             
             <!--- @private -->
             <s:Scroller id="scroller" left="0" top="0" right="0" bottom="0" hasFocusableChildren="false" minViewportInset="1">
-                <!--- @copy spark.components.SkinnableDataContainer#dataGroup-->
-                <s:DataGroup id="dataGroup" itemRenderer="spark.skins.spark.DefaultItemRenderer">
+                <s:DataGroup id="dataGroup" left="0" top="0" right="20" bottom="0" itemRenderer="spark.skins.spark.DefaultItemRenderer">
                     <s:layout>
-                        <s:VerticalLayout gap="0" horizontalAlign="contentJustify" requestedMinRowCount="1" requestedMaxRowCount="6"/>
+                        <s:VerticalLayout gap="0" horizontalAlign="contentJustify" requestedMinRowCount="1" requestedMaxRowCount="10"/>
                     </s:layout>
                 </s:DataGroup> 
             </s:Scroller>
@@ -141,7 +132,7 @@
             @copy spark.components.supportClasses.DropDownListBase#openButton
             @see spark.skins.spark.DropDownListButtonSkin -->
     <s:Button id="openButton" left="0" right="0" top="0" bottom="0" focusEnabled="false" tabEnabled="false"
-        skinClass="com.goldpricecafe.mobile.skins.DropdownButtonSkin" />  
+        skinClass="com.goldpricecafe.mobile.skins.DropdownButtonSkin"/>  
         
 
 </s:SparkSkin>

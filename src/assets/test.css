@@ -1,0 +1,150 @@
+/* CSS for goldpricecafe mobile application */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+
+global {
+	
+	color: #777700;
+	borderColor: #777700; 
+	fontFamily: michroma;
+	fontWeight: normal;	
+	fontStyle: normal;	
+}
+
+.button, .radioBtn, .myDropDown
+{
+	fontFamily: mate;
+	fontWeight: normal;	
+	fontStyle: normal;
+	chromeColor: #000000;
+	paddingBottom: 10;
+	paddingTop: 10;	
+	glossiness: 15;
+}
+
+#okGtn, #cancelBtn {
+	
+	paddingLeft: 30;
+	paddingRight: 30;
+}
+
+.bigButton 
+{
+	paddingBottom: 14;
+	paddingTop: 14;	
+}
+
+.myLabel, .myDropDown
+{
+	fontFamily: mateCFF;
+	font-lookup: embeddedCFF;
+}
+
+s|BusyIndicator
+{
+	symbolColor: #FFFF00; 
+}
+
+.radioBtn 
+{
+	paddingBottom: 4;
+	paddingTop: 4;
+	glossiness: 20;
+}
+
+#indivChartBtn
+{
+	paddingLeft: 15;
+	paddingRight: 15;	
+}
+
+.application {
+	
+	backgroundColor: #280605;
+	
+}
+
+.myDropDown {
+	
+	alternatingItemColors: null;
+	contentBackgroundColor: #280605;
+	contentBackgroundAlpha: 1;
+	borderVisible: true;
+	borderColor: #998800;
+	
+}
+
+#chartPanel {
+	
+	/* Font */
+	fontFamily: arial;
+	color: #999999;
+	
+	/* Grid */
+	vGridStrokeColor: #999999;
+	vGridStrokeAlpha: 1;
+	hGridStrokeColor: #999999;
+	hGridStrokeAlpha: 1;	
+	vGridFillColor: #555555;
+	vGridFillAlpha: 0.5;	
+	hGridFillColor: #555555;
+	hGridFillAlpha: 0.5;
+	
+	/*Series*/
+	serie2DaysAgoColor: #333300;
+	serie1DayAgoColor: #777700;
+	serieTodayColor: #FFFF00;	
+	serie2DaysAgoWidth: 3;
+	serie1DayAgoWidth: 3;
+	serieTodayWidth: 3;
+
+}
+
+.fontChart {
+	fontSize: 18;
+}
+
+mx|DataTip {
+
+	backgroundColor: #000000;
+}
+
+s|TextInput {
+	
+	color: #998800; 
+	contentBackgroundColor: #050505;
+	textAlign: right;
+	paddingBottom: 0;
+	paddingTop: 0;
+	
+}
+
+
+.selected, #fullScreenBtn
+{
+	chromeColor: #000000;
+	borderColor: #FFFF00; 
+	color: #FFFF00;
+	flat: true;
+}
+
+/* Font sizes */
+
+.fontBig {
+	fontSize: 55;
+}
+
+.fontMedium {
+	fontSize: 18;
+}
+
+.fontSmall {
+	fontSize: 14;
+}
+
+.fontVerySmall {
+	fontSize: 10;
+}
+
+
+

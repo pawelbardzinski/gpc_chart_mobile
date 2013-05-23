@@ -15,7 +15,7 @@ package com.goldpricecafe.mobile
 			addEventListener("creationComplated", function() : void  {
 				text = format(_value);
 			});
-			
+	
 		}
 		
 		//////////////////////////////////////////////
@@ -25,16 +25,36 @@ package com.goldpricecafe.mobile
 		//////////////////////////////////////////////
 		
 		[Bindable]
-		public function set numericValue( val:Number ) : void {
-			
+		public function set numericValue( val:Number ) : void
+		{		
 			_value = val;
-			text = format( _value );
+			text = format(_value);
+		}			
+		public function get numericValue() : Number 
+		{ 
+			return _value;		
+		}
+			
+		
+		[Bindable]
+		public function set maximum( val:Number ) : void {
+			
+			_maximum = val;
 			
 		}			
-		public function get numericValue() : Number { 
-			return _value;		
+		public function get maximum() : Number { 
+			return _maximum;		
+		}
+		
+		[Bindable]
+		public function set minimum( val:Number ) : void {
+			
+			_minimum = val;
+			
 		}			
-
+		public function get minimum() : Number { 
+			return _minimum;		
+		}
 		
 		public function set numberFormater( formater:NumberFormatter ) : void {
 			_formater = formater;
@@ -58,51 +78,58 @@ package com.goldpricecafe.mobile
 		//                                     		//
 		//					Protected				//
 		//											//
-		//////////////////////////////////////////////			
+		//////////////////////////////////////////////	
+		
+		protected static var _defaultFormater:NumberFormatter = new NumberFormatter();
 		
 		protected var _value:Number;
-		protected var _formater:spark.formatters.NumberFormatter;
+		protected var _formater:NumberFormatter = _defaultFormater;
 		protected var _editing:Boolean = false;
 		protected var _maxChars:Number;
+		protected var _maximum:Number = NaN;
+		protected var _minimum:Number = NaN;
+		
 		
 		protected override function focusInHandler(event:FocusEvent) : void {
+				
+			_editing = true;
+			super.textDisplay.text = _value.toString();
+			super.maxChars = NaN;	
 			
 			super.focusInHandler(event);
-			
-			_editing = true;	
-			text = format(numericValue);
-			super.maxChars = NaN;
 
 		}
 		
 		protected override function focusOutHandler(event:FocusEvent) : void {
+	
+			_editing = false;
+			var val:Number = Number( text );
 			
-			
-			var newValue:Number = Number( text );
-			
-			if( isNaN(newValue) ) {		
-				numericValue = 0;		
-			} else {
-				numericValue = newValue;
+			if( val < _minimum ) {
+				val = _minimum;
 			}
 			
-			_editing = false;		
-			text = format(numericValue);
-			super.maxChars = _maxChars;	
-			super.focusOutHandler(event);			
-	
-		}		
-				
+			if( val > _maximum ) {
+				val = _maximum ;
+			}
+			
+			numericValue = val;
+			super.textDisplay.text = format(_value);
+			super.focusOutHandler(event);
+
+		}	
 		
+					
 		protected function format( val:Number ) : String {
 			
-			if( _editing || (!_formater) ) {
-				return isNaN(val) ? null : val.toString();
+			if( _editing ) {
+				return val.toString();
 			}
 			
 			return _formater.format(val);
 			
 		}
+		
 		
 	}
 }
