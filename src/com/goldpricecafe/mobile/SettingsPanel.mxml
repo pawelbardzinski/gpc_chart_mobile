@@ -44,7 +44,7 @@
 				
 			public function reset() : void {
 				
-				CustomStyleManager.resetStyles();
+				CustomStyleManager.resetTheme();
 				synchronize();
 				
 			}
@@ -209,7 +209,7 @@
 			
 			protected function presetHandler(event:Event):void 
 			{
-				CustomStyleManager.loadPreset( String(presetSpinner.selectedItem) );
+				CustomStyleManager.loadTheme( String(presetSpinner.selectedItem) );
 				synchronize();
 			}
 			

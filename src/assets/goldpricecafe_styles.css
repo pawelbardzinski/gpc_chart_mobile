@@ -119,6 +119,10 @@ s|BusyIndicator
 
 }
 
+#chartUpdatedLbl {	
+	backgroundColor: #000000;
+}
+
 .fontChart {
 	fontSize: 18;
 }

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   backgroundAlpha="0.95"
+			   backgroundColor="0x111111">
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			
+			import spark.events.TextOperationEvent;
+			
+			public var canceled:Boolean = false;
+			
+			protected var errorColor:uint = 0xAA0000;
+			protected var messageColor:uint = 0x00AA00;
+			
+			public override function open(owner:DisplayObjectContainer, modal:Boolean=false):void {
+				
+				 var name:String = "custom";
+				 var no:int = 1;
+				 
+				 while( CustomStyleManager.themeNames.indexOf(name) >= 0 ) {
+					 
+					 name = "custom" + no.toString();
+					 no++;
+					 
+				 }
+				 
+				 super.open(owner,modal);				 
+				 
+				 popup_nameInput.text = name;
+				 popup_saveBtn.enabled = true;
+				 popup_nameInput.enabled = true;
+				 popup_cancelBtn.label = "Cancel";			 
+				 messageLbl.text = " "; 
+				 canceled = true;
+				  
+			}
+			
+			protected function textinputChangeHandler(event:TextOperationEvent):void
+			{
+				 if((!popup_nameInput.text) || (popup_nameInput.text == "")) {
+					 
+					 popup_saveBtn.enabled = false;
+					 messageLbl.text = "Enter theme name!";
+					 messageLbl.setStyle("color", errorColor);
+					 return;
+					 
+				 }
+				 
+				 if( CustomStyleManager.swfThemes.indexOf(popup_nameInput.text) >= 0 ) {
+			
+					 popup_saveBtn.enabled = false;
+					 messageLbl.text = "Theme '" + popup_nameInput.text + "' exists and is read-only!";
+					 messageLbl.setStyle("color", errorColor);
+					 return;					 
+				 }
+				 
+				 popup_saveBtn.enabled = true;
+				 messageLbl.text = " ";
+			 
+			}
+			
+				
+			protected function saveBtnClickHandler(event:MouseEvent):void
+			{
+				CustomStyleManager.saveTheme( popup_nameInput.text );
+				
+				messageLbl.text = "Theme '" + popup_nameInput.text + "' saved.";
+				messageLbl.setStyle("color", messageColor);				
+				
+				popup_saveBtn.enabled = false;
+				popup_nameInput.enabled = false;
+				popup_cancelBtn.label = "Close";
+				canceled = false;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+
+	</fx:Declarations>
+	
+	<s:Label text="Save theme" 
+			 styleName="myLabel fontMedium" 
+			 backgroundColor="0x000000" backgroundAlpha="1" 
+			 width="100%" 
+			 paddingLeft="20" paddingRight="20" paddingTop="5" paddingBottom="5"/>
+	<s:VGroup  paddingLeft="20" paddingBottom="20" paddingRight="20" paddingTop="20" width="100%">
+		<s:HGroup width="100%" gap="20" verticalAlign="middle">
+			<s:Label text="Theme name:" styleName="myLabel fontBig"/>
+			<s:TextInput id="popup_nameInput" styleName="fontBig" change="textinputChangeHandler(event)" needsSoftKeyboard="true"/>	
+		</s:HGroup>
+		<s:Label id="messageLbl" width="100%" text=" " styleName="myLabel fontMedium" color="0xAA0000" textAlign="center"/>
+		<s:HGroup width="100%" gap="10"> 
+			<s:Button id="popup_saveBtn" width="50%" label="Save" styleName="button bigButton fontBig" enabled="false" click="saveBtnClickHandler(event)"/> 
+			<s:Button id="popup_cancelBtn" width="50%" label="Cancel" styleName="button bigButton fontBig" click="close()"/> 
+		</s:HGroup>	
+	</s:VGroup>
+	
+</s:SkinnablePopUpContainer>

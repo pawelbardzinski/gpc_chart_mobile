@@ -15,29 +15,38 @@
 	<s:states>
 		<s:State name="theme"/>
 		<s:State name="backgroundColor"/>
-		<s:State name="topLine"/>
 		<s:State name="mainFont"/>
+		<s:State name="topLine"/>
+		<s:State name="buttons"/>
+		<s:State name="selection"/>
 		<s:State name="chartFont"/>
 		<s:State name="chartBackground"/>
 		<s:State name="verticalGrid"/>
 		<s:State name="horizontalGrid"/>
+		<s:State name="todaySeries"/>
+		<s:State name="yesterdaySeries"/>	
+		<s:State name="twoDaysAgoSeries"/>		
 	</s:states>	
+	
+	<fx:Declarations>	
+	</fx:Declarations>	
 	
 	<fx:Script>
 		<![CDATA[
 			import com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown;
 			
 			import mx.events.FlexEvent;
+			import mx.events.StateChangeEvent;
 			import mx.graphics.IFill;
 			import mx.graphics.SolidColor;
+			import mx.managers.PopUpManager;
 			
+			import spark.events.PopUpEvent;
 			import spark.primitives.Rect;
 			
 			/* Exit event name. Dispatched when exit button is clicked. */
 			public static const EXIT:String = "exit";
-			
-			/* Predefined themes */
-			public static const THEMES:Array = ["default","test"];
+
 			
 			/* Selectable font sizes */
 			public static const FONT_SIZES:Array = fontSizes(8,60);
@@ -49,6 +58,9 @@
 				return sizes;
 				
 			}
+			
+			/* Selectable series widths */
+			public static const SERIES_WIDTHS:Array = [1,2,3,4,5,6,7,8];
 			
 			/* Selectable font families */
 			public static const FONT_FAMILIES:Array = ["arial","mate","michroma","tahoma"];	
@@ -65,30 +77,33 @@
 			
 			protected function get currentStateIndex() : int {
 	
-				for( var i:int = 0; i<this.states.length; i++ ) {
-					
-					if(this.states[i]["name"] == currentState) return i;
-
-				}
-				
-				return -1;
+				return stateIndex( currentState );
 				
 			}
 			protected function set currentStateIndex( index:int ) : void {
 				
-				stateRects[currentStateIndex].fill = stateFill;
-				currentState = this.states[index]["name"];
-				stateRects[index].fill = selectedStateFill;
+				if( index >= 0 && index < states.length ) {
+					currentState = this.states[index]["name"];
+				}
 				
-				statesGroup.invalidateDisplayList();
+			}
+			
+			protected function stateIndex( state:String ) : int {
 				
-			}			
+				for( var i:int = 0; i<this.states.length; i++ ) {
+					
+					if(this.states[i]["name"] == state) return i;
+					
+				}
+				
+				return -1;				
+			}
 			
 			protected function synchronize() : void {
 				
 				/* Theme */
 				if(themeDropDown) {
-					themeDropDown.selectedItem = CustomStyleManager.getTheme();
+					themeDropDown.selectedItem = CustomStyleManager.currentTheme;
 				}
 				
 				/* Top line*/
@@ -163,6 +178,7 @@
 				}
 				
 				statesGroup.addEventListener( MouseEvent.CLICK, stateRectClickHandler );
+				this.addEventListener(StateChangeEvent.CURRENT_STATE_CHANGE, stateChangeHandler );
 				
 				CustomStyleManager.addEventListener("stylesUpdated", function(event:Event) : void {
 					synchronize();
@@ -191,41 +207,55 @@
 			/* Next button handler */
 			protected function nextHandler( e:Event ) : void {
 				
-				var index:int = currentStateIndex;
-				
-				if( index + 1 < this.states.length ) {
-					
-					stateRects[index++].fill = stateFill;
-					currentState = this.states[index]["name"];
-					stateRects[index].fill = selectedStateFill;
-					
-					statesGroup.invalidateDisplayList();
-					
-				}
+				currentStateIndex = currentStateIndex + 1;
 				
 			}
 			
 			/* Back button handler */
 			protected function backHandler( e:Event ) : void {
 				
-				var index:int = currentStateIndex;
+				currentStateIndex = currentStateIndex - 1;
 				
-				if( index - 1 >= 0 ) {
-					
-					stateRects[index--].fill = stateFill;
-					currentState = this.states[index]["name"];
-					stateRects[index].fill = selectedStateFill;
-					
-					statesGroup.invalidateDisplayList();
-					
+			}			
+			
+			protected function stateChangeHandler( e:StateChangeEvent ) : void {
+				
+				if( e.oldState ) {
+					stateRects[ stateIndex(e.oldState) ].fill = stateFill;
 				}
+				
+				if( e.newState ) {
+					stateRects[ stateIndex(e.newState) ].fill = selectedStateFill;
+				}
+				
+				if( themeDropDown ) {
+					themeDropDown.selectedItem = CustomStyleManager.currentTheme;
+				}
+				
+				if( currentStateIndex == (states.length - 1) ) {
+					design_nextBtn.enabled = false;
+				} else {
+					design_nextBtn.enabled = true;
+				}
+
+				statesGroup.invalidateDisplayList();
 				
 			}
 			
+			
 			/* Save button handler */
+			
 			protected function saveHandler( e:Event ) : void {
 				
-				dispatchEvent( new Event(EXIT) );
+				var savePopup:SavePopup = new SavePopup();
+				savePopup.addEventListener(PopUpEvent.CLOSE, function( e:Event ) : void {
+					
+					if(!savePopup.canceled) currentState = "theme";
+					
+				});
+				
+				savePopup.open( this.parent, true );		
+				PopUpManager.centerPopUp( savePopup );
 				
 			}
 			
@@ -233,201 +263,354 @@
 		]]>
 	</fx:Script>
 	
-	<fx:Declarations>
-
-	</fx:Declarations>
 	
 	<!-- Current state indicator -->
 	
 	<s:HGroup id="statesGroup" width="100%" height="15" gap="1"/>
 	
-	<s:Spacer height="20" excludeFrom="verticalGrid, horizontalGrid, topLine"/>
+	<!-- Options -->
 
 	<!-- Theme -->
 	
-	<s:HGroup width="100%" height="100%" verticalAlign="middle" includeIn="theme">
-		<s:Label text="Theme:" width="25%" styleName="myLabel fontDesign"/>
+	<gpc:DesignGroup title="Theme:" includeIn="theme">
+		
 		<gpc:CustomDropDownList	id="themeDropDown"
 								width="75%"
 								styleName="myDropDown fontDesign"
 								openButtonStyle="button bigButton"
 								interactionMode="touch" 
 								touchDelay="200"
-								selectedItem="{CustomStyleManager.getTheme()}"
-								change="CustomStyleManager.loadPreset( String(themeDropDown.selectedItem) )">
+								selectedItem="{CustomStyleManager.currentTheme}"
+								change="CustomStyleManager.loadTheme( String(themeDropDown.selectedItem) )">
 			<gpc:dataProvider>
-				<s:ArrayCollection source="{THEMES}"/>
+				<s:ArrayCollection source="{CustomStyleManager.themeNames}"/>
 			</gpc:dataProvider>
-		</gpc:CustomDropDownList>					
-	</s:HGroup>	
+		</gpc:CustomDropDownList>
+		
+	</gpc:DesignGroup>	
 	
 	<!-- Top line -->	
 	
-	<s:VGroup width="100%" height="100%" includeIn="topLine">
-		<s:Label text="Top line:" width="50%" styleName="myLabel fontDesign"/>
-		<s:HGroup width="100%"  verticalAlign="middle" gap="10">
-			<s:Label text="Price:" width="25%" styleName="myLabel fontDesign"/>
+	<gpc:DesignGroup title="Top line:" includeIn="topLine">
+		
+		<s:HGroup width="75%" gap="10">
+			<s:Label text="Price:" styleName="myLabel fontDesign"/>
 			<yahoo:DropDownColorPicker id="topLinePriceColorCC"
 									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
-									   width="25%" height="100%"
+									   width="100%" height="100%"
 									   selectedColor="{CustomStyleManager.getTopLinePriceColor()}"
 									   change="CustomStyleManager.setTopLinePriceColor(topLinePriceColorCC.selectedColor)"/>
-			<s:Label text="Time:" width="25%" styleName="myLabel fontDesign"/>
+			<s:Spacer width="10"/>
+			<s:Label text="Time:" styleName="myLabel fontDesign"/>
 			<yahoo:DropDownColorPicker id="topLineCountdownColorCC"
 									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
-									   width="25%" height="100%"
+									   width="100%" height="100%"
 									   selectedColor="{CustomStyleManager.getTopLineCountdownColor()}"
 									   change="CustomStyleManager.setTopLineCountdownColor(topLineCountdownColorCC.selectedColor)"/>			
 		</s:HGroup>	
-	</s:VGroup>	
+		
+	</gpc:DesignGroup>
 	
 	<!-- Background color -->	
 	
-	<s:HGroup width="100%" height="100%"  verticalAlign="middle" includeIn="backgroundColor">
-		<s:Label text="Background color:" width="50%" styleName="myLabel fontDesign"/>
-		<yahoo:DropDownColorPicker id="borderColorCC"
-								   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
-								   width="50%" height="100%"
-								   selectedColor="{CustomStyleManager.getBackgroundColor()}"
-								   change="CustomStyleManager.setBackgroundColor(borderColorCC.selectedColor)"/>					
-	</s:HGroup>	
+	<gpc:DesignGroup title="Background:" includeIn="backgroundColor">
+		
+		<s:HGroup width="75%" gap="30">
+			
+			<s:Label text=" " styleName="myLabel fontDesign"/>
+			<yahoo:DropDownColorPicker id="borderColorCC"
+									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   width="100%" height="100%"
+									   selectedColor="{CustomStyleManager.getBackgroundColor()}"
+									   change="CustomStyleManager.setBackgroundColor(borderColorCC.selectedColor)"/>
+		</s:HGroup>
+		
+	</gpc:DesignGroup>	
 	
 	<!-- Main font -->	
 	
-	<s:HGroup width="100%" height="100%"  verticalAlign="middle" includeIn="mainFont" gap="10">
-		<s:Label text="Main font:" width="25%" styleName="myLabel fontDesign"/>
-		<yahoo:DropDownColorPicker id="fontColorCC"
-								   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
-								   width="25%" height="100%"
-								   selectedColor="{CustomStyleManager.getFontColor()}"
-								   change="CustomStyleManager.setFontColor(fontColorCC.selectedColor)"/>
-		<gpc:CustomDropDownList	id="fontSizeDropDown"
-								width="25%"
-								dataProvider="{new ArrayCollection(FONT_SIZES)}"
-								selectedItem="{CustomStyleManager.getFontSize()}"
-								change="CustomStyleManager.setFontSize(fontSizeDropDown.selectedItem)"
-								styleName="myDropDown fontDesign"
-								openButtonStyle="button bigButton"
-								interactionMode="touch" 
-								touchDelay="200"/>
-		<gpc:CustomDropDownList	id="fontFamilyDropDown"
-								width="25%"
-								dataProvider="{new ArrayCollection(FONT_FAMILIES)}"
-								selectedItem="{CustomStyleManager.getFontFamily()}"
-								change="CustomStyleManager.setFontFamily(fontFamilyDropDown.selectedItem)"
-								styleName="myDropDown fontDesign"
-								openButtonStyle="button bigButton"
-								interactionMode="touch" 
-								touchDelay="200"/>		
-	</s:HGroup>
+	<gpc:DesignGroup title="Main font:" includeIn="mainFont">
+		
+		<s:HGroup width="75%" gap="10">
+			<yahoo:DropDownColorPicker id="fontColorCC"
+									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   width="100%" height="100%"
+									   selectedColor="{CustomStyleManager.getFontColor()}"
+									   change="CustomStyleManager.setFontColor(fontColorCC.selectedColor)"/>
+			<gpc:CustomDropDownList	id="fontSizeDropDown"
+									width="100%"
+									dataProvider="{new ArrayCollection(FONT_SIZES)}"
+									selectedItem="{CustomStyleManager.getFontSize()}"
+									change="CustomStyleManager.setFontSize(fontSizeDropDown.selectedItem)"
+									styleName="myDropDown fontDesign"
+									openButtonStyle="button bigButton"
+									interactionMode="touch" 
+									touchDelay="200"/>
+			<gpc:CustomDropDownList	id="fontFamilyDropDown"
+									width="100%"
+									dataProvider="{new ArrayCollection(FONT_FAMILIES)}"
+									selectedItem="{CustomStyleManager.getFontFamily()}"
+									change="CustomStyleManager.setFontFamily(fontFamilyDropDown.selectedItem)"
+									styleName="myDropDown fontDesign"
+									openButtonStyle="button bigButton"
+									interactionMode="touch" 
+									touchDelay="200"/>
+		</s:HGroup>
+		
+	</gpc:DesignGroup>
+	
+	<!-- Buttons -->	
+	
+	<gpc:DesignGroup title="Buttons:" includeIn="buttons">
+		
+		<s:HGroup width="50%" gap="10">
+			<s:Label text="color:"  width="40%" styleName="myLabel fontDesign"/>
+			<yahoo:DropDownColorPicker id="buttonColorCC"
+									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   width="60%" height="100%"
+									   selectedColor="{CustomStyleManager.getButtonColor()}"
+									   change="CustomStyleManager.setButtonColor(buttonColorCC.selectedColor)"/>
+		</s:HGroup>
+		<s:HGroup width="50%" gap="10">
+			<s:Label text="border:" width="40%" styleName="myLabel fontDesign"/>
+			<yahoo:DropDownColorPicker id="buttonBorderColorCC"
+									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   width="60%" height="100%"
+									   selectedColor="{CustomStyleManager.getBorderColor()}"
+									   change="CustomStyleManager.setBorderColor(buttonBorderColorCC.selectedColor)"/>
+		</s:HGroup>		
+		
+	</gpc:DesignGroup>	
+	
+	<!-- Selection -->	
+	
+	<s:HGroup width="100%" height="100%" includeIn="selection" verticalAlign="top">
+		
+		<s:Label text="Selected" styleName="myLabel fontDesign" width="25%"/>
+			
+		<s:VGroup height="100%" width="75%" verticalAlign="middle" horizontalAlign="left">
+				
+			<s:HGroup width="66%" gap="10">
+				<s:Label text="text:"  width="40%" styleName="myLabel fontDesign"/>
+				<yahoo:DropDownColorPicker id="selectedTextColorCC"
+										   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+										   width="60%" height="100%"
+										   selectedColor="{CustomStyleManager.getSelectedFontColor()}"
+										   change="CustomStyleManager.setSelectedFontColor(selectedTextColorCC.selectedColor)"/>		
+			</s:HGroup>
+			<s:HGroup width="66%" gap="10">
+				<s:Label text="color:"  width="40%" styleName="myLabel fontDesign"/>
+				<yahoo:DropDownColorPicker id="selectedButtonColorCC"
+										   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+										   width="60%" height="100%"
+										   selectedColor="{CustomStyleManager.getSelectedChromeColor()}"
+										   change="CustomStyleManager.setSelectedChromeColor(selectedButtonColorCC.selectedColor)"/>
+			</s:HGroup>
+			<s:HGroup width="66%" gap="10">
+				<s:Label text="border:" width="40%" styleName="myLabel fontDesign"/>
+				<yahoo:DropDownColorPicker id="selectedBorderColorCC"
+										   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+										   width="60%" height="100%"
+										   selectedColor="{CustomStyleManager.getSelectedBorderColor()}"
+										   change="CustomStyleManager.setSelectedBorderColor(selectedBorderColorCC.selectedColor)"/>
+			</s:HGroup>	
+			
+		</s:VGroup>
+		
+	</s:HGroup>			
 	
 	<!-- Chart font -->	
 	
-	<s:HGroup width="100%" height="100%" verticalAlign="middle" includeIn="chartFont" gap="10">
-		<s:Label text="Chart font:" width="25%" styleName="myLabel fontDesign"/>
-		<yahoo:DropDownColorPicker id="chartFontColorCC"
-								   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
-								   width="25%" height="100%"
-								   selectedColor="{CustomStyleManager.getChartFontColor()}"
-								   change="CustomStyleManager.setChartFontColor(chartFontColorCC.selectedColor)"/>
-		<gpc:CustomDropDownList	id="chartFontSizeDropDown"
-								width="25%"
-								dataProvider="{new ArrayCollection(FONT_SIZES)}"
-								selectedItem="{CustomStyleManager.getChartFontSize()}"
-								change="CustomStyleManager.setChartFontSize(chartFontSizeDropDown.selectedItem)"
-								styleName="myDropDown fontDesign"
-								openButtonStyle="button bigButton"
-								interactionMode="touch" 
-								touchDelay="200"/>
-		<gpc:CustomDropDownList	id="chartFontFamilyDropDown"
-								width="25%"
-								dataProvider="{new ArrayCollection(FONT_FAMILIES)}"
-								selectedItem="{CustomStyleManager.getChartFontFamily()}"
-								change="CustomStyleManager.setChartFontFamily(chartFontFamilyDropDown.selectedItem)"
-								styleName="myDropDown fontDesign"
-								openButtonStyle="button bigButton"
-								interactionMode="touch" 
-								touchDelay="200"/>		
-	</s:HGroup>
+	<gpc:DesignGroup title="Chart font:" includeIn="chartFont">
+	
+		<s:HGroup width="75%" gap="10">
+			
+			<yahoo:DropDownColorPicker id="chartFontColorCC"
+									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   width="100%" height="100%"
+									   selectedColor="{CustomStyleManager.getChartFontColor()}"
+									   change="CustomStyleManager.setChartFontColor(chartFontColorCC.selectedColor)"/>
+			<gpc:CustomDropDownList	id="chartFontSizeDropDown"
+									width="100%"
+									dataProvider="{new ArrayCollection(FONT_SIZES)}"
+									selectedItem="{CustomStyleManager.getChartFontSize()}"
+									change="CustomStyleManager.setChartFontSize(chartFontSizeDropDown.selectedItem)"
+									styleName="myDropDown fontDesign"
+									openButtonStyle="button bigButton"
+									interactionMode="touch" 
+									touchDelay="200"/>
+			<gpc:CustomDropDownList	id="chartFontFamilyDropDown"
+									width="100%"
+									dataProvider="{new ArrayCollection(FONT_FAMILIES)}"
+									selectedItem="{CustomStyleManager.getChartFontFamily()}"
+									change="CustomStyleManager.setChartFontFamily(chartFontFamilyDropDown.selectedItem)"
+									styleName="myDropDown fontDesign"
+									openButtonStyle="button bigButton"
+									interactionMode="touch" 
+									touchDelay="200"/>		
+		</s:HGroup>
+		
+	</gpc:DesignGroup>
 	
 	<!-- Chart background -->	
 	
-	<s:HGroup width="100%" height="100%" verticalAlign="middle" includeIn="chartBackground" gap="10">
-		<s:Label text="Chart background:" width="50%" styleName="myLabel fontDesign"/>
-		<yahoo:DropDownColorPicker id="chartBackgroundColorCC"
-								   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
-								   width="25%" height="100%"
-								   selectedColor="{CustomStyleManager.getChartBackgroundColor()}"
-								   change="CustomStyleManager.setChartBackgroundColor(chartBackgroundColorCC.selectedColor)"/>
-		<gpc:NumberInput id="chartBackgroundAlphaInput" width="25%" height="100%" minimum="0" maximum="1"
-						 numericValue="{CustomStyleManager.getChartBackgroundAlpha()}"
-						 focusOut="CustomStyleManager.setChartBackgroundAlpha(chartBackgroundAlphaInput.numericValue)" />
-	</s:HGroup>	
-	
+	<gpc:DesignGroup title="Chart background:" includeIn="chartBackground">
+		
+		<s:HGroup width="75%" gap="10">
+
+			<yahoo:DropDownColorPicker id="chartBackgroundColorCC"
+									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   width="100%" height="100%"
+									   selectedColor="{CustomStyleManager.getChartBackgroundColor()}"
+									   change="CustomStyleManager.setChartBackgroundColor(chartBackgroundColorCC.selectedColor)"/>
+			<s:Label text=" " styleName="myLabel fontDesign"/>
+			<gpc:NumberInput id="chartBackgroundAlphaInput" width="100%" height="100%" minimum="0" maximum="1"
+							 numericValue="{CustomStyleManager.getChartBackgroundAlpha()}"
+							 focusOut="CustomStyleManager.setChartBackgroundAlpha(chartBackgroundAlphaInput.numericValue)" />
+		</s:HGroup>
+		
+	</gpc:DesignGroup>
+
 	<!-- Vertical grid -->	
 	
-	<s:VGroup width="100%" height="100%" includeIn="verticalGrid">
-		<s:Label text="Vertical grid:" width="50%" styleName="myLabel fontDesign"/>
-		<s:HGroup width="100%"  verticalAlign="middle" gap="10">
-			<s:Label text="Stroke:" width="50%" styleName="myLabel fontDesign"/>
+	<gpc:DesignGroup title="Vertical grid:" includeIn="verticalGrid">	
+
+		<s:HGroup width="75%"  verticalAlign="middle" gap="10">
+			<s:Label text="Stroke:" width="30%" styleName="myLabel fontDesign"/>
 			<yahoo:DropDownColorPicker id="vGridStrokeColorCC"
 									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
-									   width="25%" height="100%"
+									   width="35%" height="100%"
 									   selectedColor="{CustomStyleManager.getVGridStrokeColor()}"
 									   change="CustomStyleManager.setVGridStrokeColor(vGridStrokeColorCC.selectedColor)"/>
-			<gpc:NumberInput id="vGridStrokeAlphaInput" width="25%" height="100%" minimum="0" maximum="1"
+			<gpc:NumberInput id="vGridStrokeAlphaInput" width="35%" height="100%" minimum="0" maximum="1"
 							 numericValue="{CustomStyleManager.getVGridStrokeAlpha()}"
 							 focusOut="CustomStyleManager.setVGridStrokeAlpha(vGridStrokeAlphaInput.numericValue)" />
 		</s:HGroup>	
-		<s:HGroup width="100%"  verticalAlign="middle" gap="10">
-			<s:Label text="Fill:" width="50%" styleName="myLabel fontDesign"/>
+		<s:HGroup width="75%"  verticalAlign="middle" gap="10">
+			<s:Label text="Fill:" width="30%" styleName="myLabel fontDesign"/>
 			<yahoo:DropDownColorPicker id="vGridFillColorCC"
 									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
-									   width="25%" height="100%"
+									   width="35%" height="100%"
 									   selectedColor="{CustomStyleManager.getVGridFillColor()}"
 									   change="CustomStyleManager.setVGridFillColor(vGridFillColorCC.selectedColor)"/>
-			<gpc:NumberInput id="vGridFillAlphaInput" width="25%" height="100%" minimum="0" maximum="1"
+			<gpc:NumberInput id="vGridFillAlphaInput" width="35%" height="100%" minimum="0" maximum="1"
 							 numericValue="{CustomStyleManager.getVGridFillAlpha()}"
 							 focusOut="CustomStyleManager.setVGridFillAlpha(vGridFillAlphaInput.numericValue)" />
 		</s:HGroup>	
-	</s:VGroup>
+		
+	</gpc:DesignGroup>
 	
 	<!-- Horizontal grid -->	
 	
-	<s:VGroup width="100%" height="100%" includeIn="horizontalGrid">
-		<s:Label text="Horizontal grid:" width="50%" styleName="myLabel fontDesign"/>
-		<s:HGroup width="100%"  verticalAlign="middle" gap="10">
-			<s:Label text="Stroke:" width="50%" styleName="myLabel fontDesign"/>
+	<gpc:DesignGroup title="Horizontal grid:" includeIn="horizontalGrid">
+		
+		<s:HGroup width="75%"  verticalAlign="middle" gap="10">
+			<s:Label text="Stroke:" width="30%" styleName="myLabel fontDesign"/>
 			<yahoo:DropDownColorPicker id="hGridStrokeColorCC"
 									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
-									   width="25%" height="100%"
+									   width="35%" height="100%"
 									   selectedColor="{CustomStyleManager.getHGridStrokeColor()}"
 									   change="CustomStyleManager.setHGridStrokeColor(hGridStrokeColorCC.selectedColor)"/>
-			<gpc:NumberInput id="hGridStrokeAlphaInput" width="25%" height="100%" minimum="0" maximum="1"
+			<gpc:NumberInput id="hGridStrokeAlphaInput" width="35%" height="100%" minimum="0" maximum="1"
 							 numericValue="{CustomStyleManager.getHGridStrokeAlpha()}"
-							 focusOut="CustomStyleManager.setVGridStrokeAlpha(hGridStrokeAlphaInput.numericValue)" />
+							 focusOut="CustomStyleManager.setHGridStrokeAlpha(hGridStrokeAlphaInput.numericValue)" />
 		</s:HGroup>	
-		<s:HGroup width="100%"  verticalAlign="middle" gap="10">
-			<s:Label text="Fill:" width="50%" styleName="myLabel fontDesign"/>
+		<s:HGroup width="75%"  verticalAlign="middle" gap="10">
+			<s:Label text="Fill:" width="30%" styleName="myLabel fontDesign"/>
 			<yahoo:DropDownColorPicker id="hGridFillColorCC"
 									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
-									   width="25%" height="100%"
+									   width="35%" height="100%"
 									   selectedColor="{CustomStyleManager.getHGridFillColor()}"
 									   change="CustomStyleManager.setHGridFillColor(hGridFillColorCC.selectedColor)"/>
-			<gpc:NumberInput id="hGridFillAlphaInput" width="25%" height="100%" minimum="0" maximum="1"
+			<gpc:NumberInput id="hGridFillAlphaInput" width="35%" height="100%" minimum="0" maximum="1"
 							 numericValue="{CustomStyleManager.getHGridFillAlpha()}"
 							 focusOut="CustomStyleManager.setHGridFillAlpha(hGridFillAlphaInput.numericValue)" />
 		</s:HGroup>	
-	</s:VGroup>
+		
+	</gpc:DesignGroup>
+	
+	<!-- Today series -->
+
+	<gpc:DesignGroup title="Today series:" includeIn="todaySeries">
+		
+		<s:HGroup width="75%" gap="10">
+			
+			<yahoo:DropDownColorPicker id="todaySeriesColorCC"
+									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   width="100%" height="100%"
+									   selectedColor="{CustomStyleManager.getMainSerieColor()}"
+									   change="CustomStyleManager.setMainSerieColor(todaySeriesColorCC.selectedColor)"/>
+
+			<gpc:CustomDropDownList	id="todaySeriesWidthDropDown"
+									width="100%"
+									dataProvider="{new ArrayCollection(SERIES_WIDTHS)}"
+									selectedItem="{CustomStyleManager.getMainSerieWidth()}"
+									change="CustomStyleManager.setMainSerieWidth(todaySeriesWidthDropDown.selectedItem)"
+									styleName="myDropDown fontDesign"
+									openButtonStyle="button bigButton"
+									interactionMode="touch" 
+									touchDelay="200"/>
+		</s:HGroup>
+		
+	</gpc:DesignGroup>	
+	
+	<!-- Yesterday series -->
+	
+	<gpc:DesignGroup title="Yesterday series:" includeIn="yesterdaySeries">
+		
+		<s:HGroup width="75%" gap="10">
+			
+			<yahoo:DropDownColorPicker id="yesterdaySeriesColorCC"
+									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   width="100%" height="100%"
+									   selectedColor="{CustomStyleManager.getSerie2Color()}"
+									   change="CustomStyleManager.setSerie2Color(yesterdaySeriesColorCC.selectedColor)"/>
+			
+			<gpc:CustomDropDownList	id="yesterdaySeriesWidthDropDown"
+									width="100%"
+									dataProvider="{new ArrayCollection(SERIES_WIDTHS)}"
+									selectedItem="{CustomStyleManager.getSerie2Width()}"
+									change="CustomStyleManager.setSerie2Width(yesterdaySeriesWidthDropDown.selectedItem)"
+									styleName="myDropDown fontDesign"
+									openButtonStyle="button bigButton"
+									interactionMode="touch" 
+									touchDelay="200"/>
+		</s:HGroup>
+		
+	</gpc:DesignGroup>	
+	
+	<!-- Two days ago series -->
+	
+	<gpc:DesignGroup title="Two days ago series:" includeIn="twoDaysAgoSeries">
+		
+		<s:HGroup width="75%" gap="10">
+			
+			<yahoo:DropDownColorPicker id="twoDaysAgoSeriesColorCC"
+									   pickerRenderer="com.yahoo.astra.mx.controls.colorPickerClasses.AdvancedColorPickerDropDown"
+									   width="100%" height="100%"
+									   selectedColor="{CustomStyleManager.getSerie3Color()}"
+									   change="CustomStyleManager.setSerie3Color(twoDaysAgoSeriesColorCC.selectedColor)"/>
+			
+			<gpc:CustomDropDownList	id="twoDaysAgoSeriesWidthDropDown"
+									width="100%"
+									dataProvider="{new ArrayCollection(SERIES_WIDTHS)}"
+									selectedItem="{CustomStyleManager.getSerie3Width()}"
+									change="CustomStyleManager.setSerie3Width(twoDaysAgoSeriesWidthDropDown.selectedItem)"
+									styleName="myDropDown fontDesign"
+									openButtonStyle="button bigButton"
+									interactionMode="touch" 
+									touchDelay="200"/>
+		</s:HGroup>
+		
+	</gpc:DesignGroup>		
 	
 	<!-- Button bar -->
-	
-	<s:Spacer height="20" />
 	
 	<s:HGroup width="100%" gap="10">
 		<s:Button id="design_backBtn" label="Back" styleName="button bigButton fontBig" width="25%" click="backHandler(event)" excludeFrom="theme"/>
 		<s:Button id="design_saveBtn" label="Save" styleName="button bigButton fontBig" width="25%" click="saveHandler(event)" excludeFrom="theme"/>
-		<s:Spacer width="50%" includeIn="theme" />
+		<s:Spacer width="25%"  includeIn="theme"/>		
+		<s:Button id="design_resetBtn" label="Reset" styleName="button bigButton fontBig" width="25%" click="CustomStyleManager.resetTheme()" includeIn="theme"/>
 		<s:Button id="design_exitBtn" label="Exit" styleName="button bigButton fontBig" width="25%" click="exitHandler(event)"/>
 		<s:Button id="design_nextBtn" label="Next" styleName="button bigButton fontBig" width="25%" click="nextHandler(event)"/>
 	</s:HGroup>
